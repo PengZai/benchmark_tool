@@ -1,0 +1,16 @@
+# String for model factory
+model_str: "priorda"
+# Model config
+model_config:
+  name: "priorda"
+  version: "1.1"
+  # Checkpoint path
+  ckpt_dir: "${root_pretrained_checkpoints_dir}"
+  conditioned_model_size: "vitb"
+  coarse_only: false
+# Image Normalization Type
+data_norm_type: "unchange"
+# Torch hub force reload
+torch_hub_force_reload: false
+# test resolution
+test_resolution: [512, 336]

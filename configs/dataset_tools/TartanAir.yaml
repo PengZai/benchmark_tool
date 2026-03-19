@@ -1,0 +1,93 @@
+system:
+  use_data_source: 0
+  start_idx: 40
+  end_idx: 45
+
+
+output:
+  isOutput: 1
+  path: /media/spiderman/zhipeng_8t1/datasets/tartan_air/gascola_sample_P001/P001/wai_data
+  isSaveVisualizationDepthImage: 1
+
+
+
+visualization:
+  isVisualization: 1
+
+
+
+cameras:
+  camera0:
+    id: 0
+    name: rgb0
+    imagepath: /media/spiderman/zhipeng_8t1/datasets/tartan_air/gascola_sample_P001/P001/image_left
+    camera_model: pinhole
+    resolution: [640, 480] # width x height, don't larger than original resolution
+    original_intrinsics: [320, 320, 320, 240] #fx, fy, cu, cv
+    distortion_model: radtan
+    distortion_coeffs: [0,0,0,0] #k1,k2,p1,p2
+
+  camera1:
+    id: 0
+    name: rgb0
+    imagepath: /media/spiderman/zhipeng_8t1/datasets/tartan_air/gascola_sample_P001/P001/image_right
+    camera_model: pinhole
+    resolution: [640, 480] # width x height, don't larger than original resolution
+    original_intrinsics: [320, 320, 320, 240] #fx, fy, cu, cv
+    distortion_model: radtan
+    distortion_coeffs: [0,0,0,0] #k1,k2,p1,p2
+
+
+sensor3ds:
+  sensor3d0:
+    id: 0
+    sensor3dtype: imagedepth
+    name: GT_depth_left
+    sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/tartan_air/gascola_sample_P001/P001/depth_left
+    camera_model: pinhole
+    resolution: [640, 480] # width x height
+    intrinsics: [320, 320, 320, 240] #fx, fy, cu, cv
+    distortion_model: radtan
+    distortion_coeffs: [0,0,0,0] #k1,k2,p1,p2
+
+
+  sensor3d1:
+    id: 0
+    sensor3dtype: imagedepth
+    name: GT_depth_right
+    sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/tartan_air/gascola_sample_P001/P001/depth_right
+    camera_model: pinhole
+    resolution: [640, 480] # width x height
+    intrinsics: [320, 320, 320, 240] #fx, fy, cu, cv
+    distortion_model: radtan
+    distortion_coeffs: [0,0,0,0] #k1,k2,p1,p2
+
+
+data_source0:
+  trajectorytype: gt_trajectory
+  trajectory_path: /media/spiderman/zhipeng_8t1/datasets/tartan_air/gascola_sample_P001/P001/pose_left.txt 
+  imagepath: /media/spiderman/zhipeng_8t1/datasets/tartan_air/gascola_sample_P001/P001/image_left
+  used_sensor3d_idxes: [0]
+  num_cumulation: [0] # if there are two used sensor3ds, you need to specify two numbers of cumulation.
+  T_pose_used_sensor3d_idx0:
+    - [0,0,1,0]
+    - [1,0,0,0]
+    - [0,1,0,0] 
+    - [0, 0, 0, 1.0]
+  T_pose_used_sensor3d_idx1:
+    - [0,   0., 1.,   0]
+    - [1.0,   0,   0., 0.25]
+    - [0, 1.0,   0,   0] 
+    - [0,   0,   0,   1.0]
+  used_camera_idxes: [0]
+  T_pose_used_cam_idx0:
+    - [0,0,1,0]
+    - [1,0,0,0]
+    - [0,1,0,0] 
+    - [0, 0, 0, 1.0]
+  T_pose_used_cam_idx1:
+    - [0,   0., 1.,   0]
+    - [1.0,   0,   0., 0.25]
+    - [0, 1.0,   0,   0] 
+    - [0,   0,   0,   1.0]
+

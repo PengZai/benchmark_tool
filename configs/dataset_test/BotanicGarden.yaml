@@ -1,0 +1,5 @@
+
+
+principal_point_centered: 0 # If True, the principal point is centered in the image.
+aug_crop: 0   # (int) Augment crop. If int greater than 0, indicates the number of pixels to increase in target resolution.
+is_metric_scale: True # Boolean indicating whether the geometric inputs are in metric scale or not.

@@ -1,0 +1,191 @@
+# %YAML:1.1 # need to specify the file type at the top!
+
+
+system:
+  use_data_source: 1
+  # start_idx: 25
+  # end_idx: 40
+  start_idx: 15
+  end_idx: 30
+
+output:
+  isOutput: 1
+  path: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/wai_data2
+  isSaveVisualizationDepthImage: 1
+
+
+
+visualization:
+  isVisualization: 0
+
+
+cameras:
+  camera0:
+    id: 0
+    name: left_rgb
+    imagepath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/left_rgb
+    camera_model: pinhole
+    resolution: [960, 600] # width x height, don't larger than original resolution
+    original_intrinsics: [642.9165664800531, 641.9171825800378, 460.1840658156501, 308.5846449100310] #fx, fy, cu, cv
+    distortion_model: radtan
+    distortion_coeffs: [-0.060164620903866,0.094005180631043,0,0] #k1,k2,p1,p2
+
+
+  camera1:
+    id: 1
+    name: right_rgb
+    imagepath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/right_rgb
+    camera_model: pinhole
+    resolution: [960, 600] # width x height, don't larger than original resolution
+    original_intrinsics: [644.4385505412966, 643.5879520187435, 455.1775919513420, 304.1616226347153] #fx, fy, cu, cv
+    distortion_model: radtan
+    distortion_coeffs: [-0.057705696896734,0.086955444511364,0,0] #k1,k2,p1,p2
+
+
+# GT depth
+sensor3ds:
+  sensor3d0:
+    id: 0
+    sensor3dtype: pointcloud
+    name: livox_lidar
+    sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/livox_lidar
+
+  sensor3d1:
+    id: 1
+    sensor3dtype: pointcloud
+    name: vlp16_lidar
+    sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/velodyne_lidar
+  
+  sensor3d2:
+    id: 2
+    sensor3dtype: imagedepth
+    name: colmap_dense_depth_in_left_rgb_plane
+    sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/colmap_dense_depth/left_rgb/depth
+    camera_model: pinhole
+    resolution: [960, 600] # width x height
+    intrinsics: [649.2877197265625, 649.6898193359375, 461.7536926269531, 308.2833557128906] #fx, fy, cu, cv
+    distortion_model: radtan
+    distortion_coeffs: [0,0,0,0] #k1,k2,p1,p2
+
+
+  sensor3d3:
+    id: 3
+    sensor3dtype: imagedepth
+    name: colmap_dense_depth_in_right_rgb_plane
+    sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/colmap_dense_depth/right_rgb/depth
+    camera_model: pinhole
+    resolution: [960, 600] # width x height
+    intrinsics: [649.1369018554688, 650.2776489257812, 456.9627380371094, 304.0177917480469] #fx, fy, cu, cv
+    distortion_model: radtan
+    distortion_coeffs: [0,0,0,0] #k1,k2,p1,p2
+
+  sensor3d4:
+    id: 4
+    sensor3dtype: pointcloud
+    name: colmap_sparse_point_in_left_rgb_coordinate
+    sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/colmap_sparse_points/left_rgb/pointcloud
+
+  sensor3d5:
+    id: 5
+    sensor3dtype: pointcloud
+    name: colmap_sparse_point_in_right_rgb_coordinate
+    sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/colmap_sparse_points/right_rgb/pointcloud
+
+data_source1:
+  trajectorytype: liosam
+  trajectory_path: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/lio_sam_save_map/traj_algin_with_colmap_timestamp.txt
+  used_sensor3d_idxes: [4,5]
+  num_cumulation: [0,0] # if there are two used sensor3ds, you need to specify two numbers of cumulation.
+  T_pose_used_sensor3d_idx0:
+    - [0.9999528318,  0.0041506002, -0.0088119661,  0.136921769]
+    - [-0.0041036871,  0.9999776894,  0.0051787272,  0.0011729773]
+    - [0.0088332316, -0.0051414748,  0.9999476086, -0.0076735277]
+    - [0.0,0.0,0.0,1.0] # T_xsens_livox
+  T_pose_used_sensor3d_idx1:
+    - [0.999678872580465,0.0252865664429322,0.00150422292234868,0.0584867781527745]
+    - [-0.0252723438960774,0.999649431893338,-0.0078025434141585,0.00840419966766332]
+    - [-0.00170103929405540,0.00776298237926191,0.99996789371916,0.168915521980526]
+    - [0.0,0.0,0.0,1.0] # T_xsens_vlp16    
+  T_pose_used_sensor3d_idx2:
+    - [-0.00140533,-0.00896721,0.99995881,0.18377395]
+    - [-0.99999022,0.0042065,-0.00136765,0.14789743]
+    - [-0.00419407,-0.99995095,-0.00897304,-0.0087318] 
+    - [0,0,0,1.0]  # T_xsens_rgb0
+  T_pose_used_sensor3d_idx3:
+    - [-0.00140533,-0.00896721,0.99995881,0.18377395]
+    - [-0.99999022,0.0042065,-0.00136765,0.14789743]
+    - [-0.00419407,-0.99995095,-0.00897304,-0.0087318] 
+    - [0,0,0,1.0]  # T_xsens_rgb1
+  T_pose_used_sensor3d_idx4:
+    - [-0.00140533,-0.00896721,0.99995881,0.18377395]
+    - [-0.99999022,0.0042065,-0.00136765,0.14789743]
+    - [-0.00419407,-0.99995095,-0.00897304,-0.0087318] 
+    - [0,0,0,1.0]  # T_xsens_rgb0
+  T_pose_used_sensor3d_idx5:
+    - [-0.00140533,-0.00896721,0.99995881,0.18377395]
+    - [-0.99999022,0.0042065,-0.00136765,0.14789743]
+    - [-0.00419407,-0.99995095,-0.00897304,-0.0087318] 
+    - [0,0,0,1.0]  # T_xsens_rgb1
+  used_camera_idxes: [0, 1]
+  T_pose_used_cam_idx0:
+    - [-0.00140533,-0.00896721,0.99995881,0.18377395]
+    - [-0.99999022,0.0042065,-0.00136765,0.14789743]
+    - [-0.00419407,-0.99995095,-0.00897304,-0.0087318] 
+    - [0,0,0,1.0]  # T_xsens_rgb0
+  T_pose_used_cam_idx1:
+    - [-0.00120822,-0.00094742,0.99999882,0.18313715]
+    - [-0.99997156,0.00744575,-0.00120114,-0.10587443]
+    - [-0.00744461,-0.99997183,-0.00095639,-0.00933521] 
+    - [0,0,0,1.0] # T_xsens_rgb1
+
+
+
+data_source2:
+  trajectorytype: colmap
+  trajectory_path: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/colmap_trajectory/traj_1.txt
+  used_sensor3d_idxes: [0]
+  num_cumulation: [5] # if there are two used sensor3ds, you need to specify two numbers of cumulation.
+  T_pose_used_sensor3d_idx0:
+    - [0.002661338136792,-0.999952173706234,-0.009360135728922,0.146784421199849]
+    - [-0.017816853650446,0.009310416709908,-0.999797750017266,-0.001255284242984]
+    - [0.999837987719715,0.002828942411399,-0.017791249427923,-0.046659078700447]
+    - [0.0,0.0,0.0,1.0] # T_rgb0_livox 
+  T_pose_used_sensor3d_idx1:
+    - [0.0238743541600432,-0.999707744440396,0.00360642510766516,0.138922870923538]
+    - [-0.00736968896588375,-0.00378431903190059,-0.999965147452649,-0.177101909101325]
+    - [0.999687515506770,0.0238486947027063,-0.00745791352160211,-0.126685267545513]
+    - [0.0,0.0,0.0,1.0] # T_rgb0_vlp16 
+  T_pose_used_sensor3d_idx2:
+    - [1.0,0,0,0]
+    - [0,1.0,0,0]
+    - [0,0,1.0,0] 
+    - [0,0,0,1.0] # T_rgb0_rgb0
+  T_pose_used_sensor3d_idx3:
+    - [0.999994564612669,-0.00327143011166783,-0.000410475508767800,0.253736175410149]
+    - [0.00326819763481066,0.999965451959397,-0.00764289028177120,-0.000362553856124796]
+    - [0.000435464509051199,0.00764150722461529,0.999970708440001,-0.000621002717451192] 
+    - [0,0,0,1.0] # T_rgb0_rgb1
+  T_pose_used_sensor3d_idx4:
+    - [1.0,0,0,0]
+    - [0,1.0,0,0]
+    - [0,0,1.0,0] 
+    - [0,0,0,1.0] # T_rgb0_rgb0
+  T_pose_used_sensor3d_idx5:
+    - [0.999994564612669,-0.00327143011166783,-0.000410475508767800,0.253736175410149]
+    - [0.00326819763481066,0.999965451959397,-0.00764289028177120,-0.000362553856124796]
+    - [0.000435464509051199,0.00764150722461529,0.999970708440001,-0.000621002717451192] 
+    - [0,0,0,1.0] # T_rgb0_rgb1
+  used_camera_idxes: [0, 1]
+  T_pose_used_cam_idx0:
+    - [1.0,0,0,0]
+    - [0,1.0,0,0]
+    - [0,0,1.0,0] 
+    - [0,0,0,1.0] # T_rgb0_rgb0
+  T_pose_used_cam_idx1:
+    - [0.999994564612669,-0.00327143011166783,-0.000410475508767800,0.253736175410149]
+    - [0.00326819763481066,0.999965451959397,-0.00764289028177120,-0.000362553856124796]
+    - [0.000435464509051199,0.00764150722461529,0.999970708440001,-0.000621002717451192] 
+    - [0,0,0,1.0] # T_rgb0_rgb1
+
+
+

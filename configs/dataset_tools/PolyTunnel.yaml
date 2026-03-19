@@ -1,0 +1,58 @@
+# %YAML:1.1 # need to specify the file type at the top!
+
+
+system:
+  use_data_source: 1
+  output_path: outputs
+  start_idx: 10
+  end_idx: 40
+
+
+cameras:
+  camera0:
+    id: 0
+    name: rgb0
+    imagepath: /media/spiderman/zhipeng_usb1/datasets/AereHFeb2026/easy2_AprilAdd/forwardLeft
+    camera_model: pinhole
+    resolution: [2048, 1536] # width x height, don't larger than original resolution
+    original_intrinsics: [1057.8085759554679, 1057.8344071878955, 1031.0394456453769, 727.7604933179784] #fx, fy, cu, cv
+    distortion_model: equidistant
+    distortion_coeffs: [-0.03999018098363963, 0.0035531756082936186, -0.0006681279528559426, -0.0009677749839773924] #k1,k2,p1,p2
+
+
+  camera1:
+    id: 1
+    name: rgb1
+    imagepath: /media/spiderman/zhipeng_usb1/datasets/AereHFeb2026/easy2_AprilAdd/forwardRight
+    camera_model: pinhole
+    resolution: [2048, 1536] # width x height, don't larger than original resolution
+    original_intrinsics: [1058.4010918263214, 1058.5035544505658, 1029.3052164899436, 717.0103196643621] #fx, fy, cu, cv
+    distortion_model: equidistant
+    distortion_coeffs: [-0.03124164248538125, -0.02633329423472931, 0.03894424132096168, -0.019217878957815994] #k1,k2,p1,p2
+
+
+
+
+
+data_source1:
+  sensor3dtype: pointcloud
+  sensor3dpath: /media/spiderman/zhipeng_usb1/datasets/AereHFeb2026/easy2_AprilAdd/ouster
+  num_cumulation: 0
+  trajectorytype: liosam
+  trajectory_path: /media/spiderman/zhipeng_usb1/datasets/AereHFeb2026/easy2_AprilAdd/lio_sam_traj/traj_algin_with_camera_timestamp.txt
+  T_pose_sensor3d:
+    - [0.9998459674, -0.0157202487, 0.007804818, 0.0235636103]
+    - [0.0155436449, 0.9996328268, 0.0221947415, -0.0394981788]
+    - [-0.0081508592, -0.0220700073, 0.9997232008, 0.0266328686]
+    - [0.0,0.0,0.0,1.0] # T_imu_os_lidar
+  used_camera_idxes: [0]
+  T_pose_used_cam_idx0:
+    - [0.0521232345, -0.0073054379,  0.9986139389,  0.1219040939]
+    - [-0.9986040017, -0.0089493528,  0.0520572461,  0.0366053924]
+    - [0.0085566474, -0.9999332676, -0.0077617087, -0.0562970105] 
+    - [0,0,0,1.0] # T_imu_cam_leftForward
+  T_pose_used_cam_idx1:
+    - [0.0280588344, -0.0081160869, 0.9995733244, 0.1262187787]
+    - [-0.999565892, -0.009216002, 0.027983796, -0.1028260523]
+    - [0.0089849508, -0.9999245943, -0.0083711539, -0.0553219053] 
+    - [0,0,0,1.0] # T_rgb0_rgb1
