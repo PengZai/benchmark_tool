@@ -26,6 +26,10 @@ MODEL_CONFIGS = {
         "module": "benchmark.external.mast3r",
         "class_name": "MASt3RSGWrapper",
     },
+    "multi_view_stereo": {
+        "module": "benchmark.external.multi_view_stereo",
+        "class_name": "MVSWrapper",
+    },
 }
 
 

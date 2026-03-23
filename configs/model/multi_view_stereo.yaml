@@ -1,0 +1,23 @@
+# String for model factory
+model_str: "multi_view_stereo"
+# Model config
+model_config:
+  name: "mvs"
+  half_ws : 2
+  debug_plot: false
+  start_match_u: 0
+  start_match_v: 0
+  ACCEPTABLE_MINI_COST: 10
+  ACCEPTABLE_COST_DIFF: 4
+  ACCEPTABLE_DEPTH_PARAMETER: 0.05
+  MAXIMUM_AGGREAGTE_COST_PENALTY: 6
+  MAXIMUM_RECONSTRUCTION_DISTANCE: 0.8
+  MAXIMUM_EXTENSION: 3
+  MINIMUM_CORRECT_CONSISTENCY_CHECK: 0
+  min_depth: 1.0
+  max_depth: 1000
+
+# Image Normalization Type
+data_norm_type: "unchange"
+# test resolution
+test_resolution: [512, 336]

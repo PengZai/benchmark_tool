@@ -5,8 +5,8 @@ defaults:
   - dataset_test: BotanicGarden
 
 batch_size: 2
-num_view: 3
-used_camera_idx_per_view: [0, 1]
+num_view: 4
+used_camera_idx_per_view: [0]
 dataset: BotanicGarden
 scene_name: BotanicGarden_1018_00_1
 root_data_dir: ${machine.root_data_dir}

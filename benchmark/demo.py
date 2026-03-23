@@ -54,7 +54,9 @@ def benchmark(config):
     model = init_model(
         config.model.model_str, config.model.model_config, torch_hub_force_reload=False
     )
-    model.to(device)
+
+    if isinstance(model, torch.nn.Module):
+        model.to(device)
     # priorda = PriorDepthAnything(device=device)
     # priorda_coarse_only = PriorDepthAnything(device=device, coarse_only=True)
 
