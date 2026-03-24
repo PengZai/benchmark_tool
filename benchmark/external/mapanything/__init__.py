@@ -1,6 +1,6 @@
 import torch
 from mapanything.models import MapAnything
-
+from mapanything.utils.geometry import quaternion_to_rotation_matrix
 
 
 
@@ -59,14 +59,20 @@ class MapAnythingWrapper(torch.nn.Module):
         for frame_idx in range(num_frame):
 
             pred_idx = frame_idx*num_views_per_frame
-            depth_z = outputs[pred_idx]['depth_z'].squeeze(-1)
-            mask = outputs[pred_idx]['mask'].squeeze(-1)
+            depth_z = outputs[pred_idx]['depth_z'].squeeze(-1).detach().cpu().numpy()
+            mask = outputs[pred_idx]['mask'].squeeze(-1).detach().cpu().numpy()
             valid_mask = depth_z > 0.0
-
+        
+            pred_T_w_c = torch.eye(4, device=outputs[pred_idx]["cam_quats"].device).unsqueeze(0)
+            pred_T_w_c_rot = quaternion_to_rotation_matrix(outputs[pred_idx]["cam_quats"].clone())
+            pred_T_w_c[..., :3, :3] = pred_T_w_c_rot
+            pred_T_w_c[..., :3, 3] = outputs[pred_idx]["cam_trans"].clone()
+            pred_T_w_c = pred_T_w_c.cpu().numpy()
             res.append(
                 {
                     'pred_depth':depth_z,
-                    'pred_depth_mask': mask & valid_mask  # this 1 threshold according to scene.show() visualization setting
+                    'pred_depth_mask': mask & valid_mask,  # this 1 threshold according to scene.show() visualization setting
+                    'pred_T_w_c': pred_T_w_c
                 }
             )
 

@@ -9,10 +9,13 @@ Source for Pose AUC Metrics: VGGT
 """
 
 import math
-
+import os
+import json
 import numpy as np
 import torch
 import torch.nn.functional as F
+import open3d as o3d
+from scipy.spatial import cKDTree as KDTree
 
 
 def valid_mean(arr, mask, axis=None, keepdims=np._NoValue):
@@ -58,7 +61,7 @@ def thresh_inliers(gt, pred, thresh=1.03, mask=None, output_scaling_factor=1.0):
     gt_norm = np.linalg.norm(gt, axis=-1)
     pred_norm = np.linalg.norm(pred, axis=-1)
 
-    gt_norm_valid = (gt_norm) > 0
+    gt_norm_valid = (pred_norm) > 0
     if mask is not None:
         combined_mask = mask & gt_norm_valid
     else:
@@ -115,4 +118,74 @@ def m_rel_ae(gt, pred, mask=None, output_scaling_factor=1.0):
     m_rel_ae = m_rel_ae if valid else np.nan
 
     return m_rel_ae
+
+
+def m_ae(gt, pred, mask=None, output_scaling_factor=1.0):
+    """Computes the mean-absolute-error for a predicted and ground truth dense map of size HxWxC.
+
+    Args:
+        gt: Ground truth map as numpy array of shape H x W x C.
+        pred: Predicted map as numpy array of shape H x W x C.
+        mask: Array of shape HxW with boolean values to indicate validity. For bool, False means invalid. Default: None
+        output_scaling_factor: Scaling factor that is applied after computing the metrics (e.g. to get [%]). Default: 1
+
+    Returns:
+        Scalar that indicates the mean-absolute-error. Scalar is np.nan if the result is invalid.
+    """
+
+    error_norm = np.linalg.norm(pred - gt, axis=-1)
+    gt_norm = np.linalg.norm(gt, axis=-1)
+
+    gt_norm_valid = gt_norm > 0
+
+    if mask is not None:
+        combined_mask = mask & gt_norm_valid
+    else:
+        combined_mask = gt_norm_valid
+
+    m_ae, valid = valid_mean(error_norm, combined_mask)
+
+
+    m_ae = m_ae * output_scaling_factor
+    m_ae = m_ae if valid else np.nan
+
+    
+    return m_ae
+
+
+
+
+def pointcloud_accuracy(gt_points, rec_points, gt_normals=None, rec_normals=None):
+    gt_points_kd_tree = KDTree(gt_points)
+    distances, idx = gt_points_kd_tree.query(rec_points, workers=-1)
+    acc = np.mean(distances)
+
+    acc_median = np.median(distances)
+
+    if gt_normals is not None and rec_normals is not None:
+        normal_dot = np.sum(gt_normals[idx] * rec_normals, axis=-1)
+        normal_dot = np.abs(normal_dot)
+
+        return acc, acc_median, np.mean(normal_dot), np.median(normal_dot)
+
+    return acc, acc_median
+
+
+def pointcloud_completion(gt_points, rec_points, gt_normals=None, rec_normals=None):
+    gt_points_kd_tree = KDTree(rec_points)
+    distances, idx = gt_points_kd_tree.query(gt_points, workers=-1)
+    comp = np.mean(distances)
+    comp_median = np.median(distances)
+
+    if gt_normals is not None and rec_normals is not None:
+        normal_dot = np.sum(gt_normals * rec_normals[idx], axis=-1)
+        normal_dot = np.abs(normal_dot)
+
+        return comp, comp_median, np.mean(normal_dot), np.median(normal_dot)
+
+    return comp, comp_median
+
+
+
+
 

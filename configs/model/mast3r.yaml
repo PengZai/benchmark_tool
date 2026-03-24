@@ -17,3 +17,6 @@ pretrained: null
 torch_hub_force_reload: false
 # test resolution
 test_resolution: [512, 336]
+postprocessing:
+  isAffineRefineDepthWithInputDepth: true
+  isConsistencyCheck: false

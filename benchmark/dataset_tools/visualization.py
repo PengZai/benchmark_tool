@@ -2,7 +2,6 @@ import weakref
 import moderngl_window
 from visualizer import Visualizer
 import argparse
-from pointcloud import LidarPointCloud, ColoarizedPointCloud, ImageDepthPointCloud
 from moderngl_window.timers.clock import Timer
 import yaml
 from datasets import BotanicGarden, TartanAir, PolyTunnel

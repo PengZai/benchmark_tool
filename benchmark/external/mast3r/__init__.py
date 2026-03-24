@@ -11,7 +11,7 @@ from mast3r.model import load_model
 
 
 
-
+# sparse_ga_optim_level, "refine", "refine+depth",  "refine+depth+intrinsics",
 class MASt3RSGWrapper(torch.nn.Module):
     def __init__(
         self,
@@ -104,6 +104,7 @@ class MASt3RSGWrapper(torch.nn.Module):
                     lr2=self.sparse_ga_lr2,
                     niter2=self.sparse_ga_niter2,
                     device=device,
+                    opt_pp="intrinsics" in self.sparse_ga_optim_level,
                     opt_depth="depth" in self.sparse_ga_optim_level,
                     shared_intrinsics=self.sparse_ga_shared_intrinsics,
                     matching_conf_thr=self.sparse_ga_matching_conf_thr,
@@ -123,10 +124,14 @@ class MASt3RSGWrapper(torch.nn.Module):
         for frame_idx in range(num_frame):
 
             pred_idx = frame_idx*num_views_per_frame
+            pred_depth = depths[pred_idx].reshape((height, width)).unsqueeze(0).detach().cpu().numpy()
+            pred_depth_mask = (confs[pred_idx] > 1).unsqueeze(0).detach().cpu().numpy()
+            pred_T_w_c = c2w_poses[pred_idx].unsqueeze(0).detach().cpu().numpy()
             res.append(
                 {
-                    'pred_depth':depths[pred_idx].reshape((height, width)).unsqueeze(0),
-                    'pred_depth_mask': (confs[pred_idx] > 1).unsqueeze(0) # this 1 threshold according to scene.show() visualization setting
+                    'pred_depth': pred_depth,
+                    'pred_depth_mask': pred_depth_mask, # this 1 threshold according to scene.show() visualization setting
+                    'pred_T_w_c': pred_T_w_c,
                 }
             )
 

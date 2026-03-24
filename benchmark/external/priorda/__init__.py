@@ -58,11 +58,16 @@ class PriorDepthAnythingWrapper(torch.nn.Module):
                 **input_view
             ) 
 
+            output = output.detach().cpu().squeeze(1).numpy()
+
             # output = output.reshape((height, width))
             res.append({
                 'pred_depth': output,
                 'pred_depth_mask': output > 0,
+                'pred_T_w_c': view['T_w_c'].cpu().numpy()
             })
+
+        
 
         return res
 

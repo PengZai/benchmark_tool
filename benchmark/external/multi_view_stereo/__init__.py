@@ -111,7 +111,9 @@ class MVSWrapper():
             res.append(
                 {
                     'pred_depth':depth,
-                    'pred_depth_mask': (depth > 0) # this 1 threshold according to scene.show() visualization setting
+                    'pred_depth_mask': (depth > 0), # this 1 threshold according to scene.show() visualization setting
+                    'pred_T_w_c': view['T_w_c'].cpu().numpy()
+
                 }
             )
 

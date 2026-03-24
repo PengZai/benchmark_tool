@@ -1,8 +1,8 @@
 
 
 # Root directory containing all datasets
-root_data_dir: "/root/lboro_nas/personal/Zhipeng/wai_data"
+root_data_dir: "/mnt/lboro_nas/personal/Zhipeng/wai_data"
 # Root directory containing pretrained checkpoints for custom models
 root_pretrained_checkpoints_dir: "/home/spiderman/vscode_projects/benchmark_tool/checkpoints"
 # Root directory to log experiments
-root_experiments_dir: "/root/lboro_nas/personal/Zhipeng/wai_data/BotanicGarden_1018_00_1/logs"
+root_experiments_dir: "/mnt/lboro_nas/personal/Zhipeng/wai_data/BotanicGarden_1018_00_1/logs"

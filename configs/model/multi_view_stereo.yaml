@@ -21,3 +21,6 @@ model_config:
 data_norm_type: "unchange"
 # test resolution
 test_resolution: [512, 336]
+postprocessing:
+  isAffineRefineDepthWithInputDepth: false
+  isConsistencyCheck: false

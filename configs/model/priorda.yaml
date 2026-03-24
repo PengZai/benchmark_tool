@@ -14,3 +14,6 @@ data_norm_type: "unchange"
 torch_hub_force_reload: false
 # test resolution
 test_resolution: [512, 336]
+postprocessing:
+  isAffineRefineDepthWithInputDepth: false
+  isConsistencyCheck: true

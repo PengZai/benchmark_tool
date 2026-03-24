@@ -303,7 +303,7 @@ class Testdataset(torch.utils.data.Dataset):
                     additional_quantities=None,
                 )
 
-                undistorted_image, GT_depth, K = self._crop_resize_if_necessary(
+                undistorted_raw_image, GT_depth, K = self._crop_resize_if_necessary(
                     image=undistorted_image,
                     resolution=self.resolution,
                     depthmap=GT_depth,
@@ -311,7 +311,7 @@ class Testdataset(torch.utils.data.Dataset):
                     additional_quantities=None,
                 )
 
-                undistorted_image = self.image_transform(undistorted_image)
+                undistorted_image = self.image_transform(undistorted_raw_image)
                 input_depth = self.depth_transform(input_depth)
                 GT_depth = self.depth_transform(GT_depth)
 
@@ -333,9 +333,12 @@ class Testdataset(torch.utils.data.Dataset):
                     'data_norm_type': self.data_norm_type,
                     'is_metric_scale': self.is_metric_scale,
                     "intrinsics": torch.tensor(K),
+                    'undistorted_raw_image': np.array(undistorted_raw_image),
                     "undistorted_image": undistorted_image,
                     "input_depth": input_depth,
-                    'GT_depth': GT_depth
+                    "input_depth_mask": input_depth > 0,
+                    'GT_depth': GT_depth,
+                    'GT_depth_mask': GT_depth > 0
                     # "input_depth_mask": input_depth_mask,
                     # "GT_depth": GT_depth,
                     # "GT_pointcloud": GT_pointcloud,
