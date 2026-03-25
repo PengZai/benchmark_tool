@@ -23,6 +23,7 @@ class MVSWrapper():
     ):
         super().__init__()
 
+        self.name = name
         self.min_depth = min_depth
         self.max_depth = max_depth
         self.MINIMUM_CORRECT_CONSISTENCY_CHECK = MINIMUM_CORRECT_CONSISTENCY_CHECK
