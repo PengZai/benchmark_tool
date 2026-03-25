@@ -1,0 +1,17 @@
+# String for model factory
+model_str: "depth_anything_v2"
+# Model config
+model_config:
+  name: "depth_anything_v2"
+  # Checkpoint path
+  ckpt_dir: "${root_pretrained_checkpoints_dir}"
+  encoder: "vitb" # vits vitb vitl vitg
+# Image Normalization Type
+data_norm_type: "dinov2"
+# Torch hub force reload
+torch_hub_force_reload: false
+# test resolution
+test_resolution: [518, 336]
+postprocessing:
+  isAffineRefineDepthWithInputDepth: true
+  isConsistencyCheck: true

@@ -2,7 +2,6 @@ import weakref
 import moderngl_window
 from benchmark.dataset_tools.visualizer import Visualizer
 import argparse
-from benchmark.dataset_tools.pointcloud import LidarPointCloud, ColoarizedPointCloud, ImageDepthPointCloud
 from moderngl_window.timers.clock import Timer
 import yaml
 from benchmark.dataset_tools.datasets import BotanicGarden, TartanAir, PolyTunnel
@@ -67,32 +66,35 @@ if __name__ == '__main__':
 
     #     points_w, colors, poses = poincloud_processor.run()
 
-    points_w_list = []
+    points_first_image_list = []
     colors_list = []
     pose_list = []
+    T_w_first_image = dataset.samples[0]['synchronized_image_data_list'][0]['T_w_cam_idx']
+    
     for sample_idx, sample in enumerate(dataset.samples):
         for synchronized_image_data in sample['synchronized_image_data_list']:
             T_w_cam_idx = synchronized_image_data['T_w_cam_idx']
             synchronized_p_c = synchronized_image_data['cumulated_p_c']
             points_c = synchronized_p_c
             points_c_h = np.hstack([points_c, np.ones((points_c.shape[0], 1), dtype=np.float32)])  # (N,4)
-            points_w_h = (T_w_cam_idx @ points_c_h.T).T
+            T_first_image_cam_idx = utils.invert_transform(T_w_first_image) @ T_w_cam_idx
+            points_first_image_h = (T_first_image_cam_idx @ points_c_h.T).T
             colors = synchronized_image_data['cumulated_p_c_color']
-            points_w_list.append(points_w_h[:, :3])
+            points_first_image_list.append(points_first_image_h[:, :3])
             colors_list.append(colors)
-            pose_list.append(T_w_cam_idx)
+            pose_list.append(T_first_image_cam_idx)
 
         # pose_list.append(sample['T_w_p'])
 
 
-    points_w = np.vstack(points_w_list, dtype='f4')
-    points_w = np.ascontiguousarray(points_w)
+    points_first_image = np.vstack(points_first_image_list, dtype='f4')
+    points_first_image = np.ascontiguousarray(points_first_image)
 
     colors = np.vstack(colors_list, dtype='f4')
     colors = np.ascontiguousarray(colors)
 
     pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(points_w)
+    pcd.points = o3d.utility.Vector3dVector(points_first_image)
     pcd.colors = o3d.utility.Vector3dVector(colors)
     o3d.io.write_point_cloud(os.path.join(configs['output']['path'], configs['cameras']['camera'+str(data_source['used_camera_idxes'][0])]['output_relative_path_dict']['name_for_GT_dir'])+'.pcd', pcd, write_ascii=False)
     poses = np.stack(pose_list, dtype="f4")
@@ -102,7 +104,7 @@ if __name__ == '__main__':
 
 
     if configs['visualization']['isVisualization'] == True:
-        VisualizerConfig._points = points_w
+        VisualizerConfig._points = points_first_image
         VisualizerConfig._rgbas = rgbas
         VisualizerConfig._poses = poses
 

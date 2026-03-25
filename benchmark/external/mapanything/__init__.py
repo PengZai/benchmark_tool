@@ -1,7 +1,7 @@
 import torch
 from mapanything.models import MapAnything
 from mapanything.utils.geometry import quaternion_to_rotation_matrix
-
+import time
 
 
 class MapAnythingWrapper(torch.nn.Module):
@@ -37,7 +37,8 @@ class MapAnythingWrapper(torch.nn.Module):
                 "data_norm_type": view['data_norm_type'],
                 'is_metric_scale': view['is_metric_scale'], 
             })
-        
+
+        start = time.time()
 
         outputs = self.model.infer(
                 input_views,
@@ -55,6 +56,10 @@ class MapAnythingWrapper(torch.nn.Module):
                 mask_edges=True,
             )
         
+        end = time.time()
+
+        runtime = end - start
+    
         res = []
         for frame_idx in range(num_frame):
 
@@ -72,7 +77,8 @@ class MapAnythingWrapper(torch.nn.Module):
                 {
                     'pred_depth':depth_z,
                     'pred_depth_mask': mask & valid_mask,  # this 1 threshold according to scene.show() visualization setting
-                    'pred_T_w_c': pred_T_w_c
+                    'pred_T_w_c': pred_T_w_c,
+                    'runtime': runtime/float(num_frame)
                 }
             )
 

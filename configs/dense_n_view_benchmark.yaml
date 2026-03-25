@@ -8,7 +8,7 @@ batch_size: 2
 num_view: 4
 used_camera_idx_per_view: [0]
 dataset: BotanicGarden
-scene_name: BotanicGarden_1018_00_1
+scene_name: BotanicGarden_1018_00_3
 root_data_dir: ${machine.root_data_dir}
 root_pretrained_checkpoints_dir: ${machine.root_pretrained_checkpoints_dir}
 root_experiments_dir: ${machine.root_experiments_dir}

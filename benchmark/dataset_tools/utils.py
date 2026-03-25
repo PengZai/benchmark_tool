@@ -8,6 +8,23 @@ from decimal import Decimal, getcontext
 getcontext().prec = 30  # enough for seconds + 9 fractional digits
 
 
+def single_depths2colors(depth, min_depth, max_depth):
+    depth = np.asarray(depth, dtype=np.float32)
+
+    # clip and normalize to [0, 255]
+    depth_clipped = np.clip(depth, min_depth, max_depth)
+    normalized = 255 * (depth_clipped - min_depth) / (max_depth - min_depth)
+    normalized = (255 - normalized).astype(np.uint8)
+
+    # matplotlib colormap expects values in [0, 1]
+    cmap = matplotlib.colormaps.get_cmap("Spectral_r")
+    colors_rgb = (cmap(normalized / 255.0)[..., :3] * 255).astype(np.uint8)
+
+    # RGB -> BGR
+    colors_bgr = colors_rgb[..., ::-1]
+
+    return colors_bgr
+
 def single_depth2color(depth, min_depth, max_depth):
 
     depth_clipped = np.clip(depth, min_depth, max_depth)

@@ -307,8 +307,8 @@ class Dataset:
 
     def loadAsyncrhonizedData(self, sample):
 
-        if sample['str_ts'] == "1666059841.050277948":
-            print("debug")
+        # if sample['str_ts'] == "1666059841.050277948":
+        #     print("debug")
         synchronized_image_data_list = []
 
         for i, camera_data in enumerate(self.camera_data_lists):
@@ -400,8 +400,8 @@ class Dataset:
 
     def loadBenchmarkData(self, sample):
 
-        if sample['str_ts'] == "1666059841.050277948":
-            print("debug")
+        # if sample['str_ts'] == "1666059841.050277948":
+        #     print("debug")
 
         cumulated_points_w_h_list = []
         for sensor3d_i, synchronized_sensor3d_data_list in enumerate(sample['synchronized_sensor3d_data_list_list']):
@@ -433,18 +433,26 @@ class Dataset:
                     if np.sum(sensor3d_data.config['distortion_coeffs']) > 0:
                         depth_image = cv2.remap(depth_image, sensor3d_data.remap1, sensor3d_data.remap2, cv2.INTER_NEAREST) # undistorted depth
                     
-                    point_sensor3d_h_list = []
-                    for v in range(depth_image.shape[0]):
-                        for u in range(depth_image.shape[1]):
-                            z =  depth_image[v, u]
-                            if z <= 1e-3 or z > 1e3:
-                                # print(f"{v},{u} invalid z:{z}")
-                                continue                            
-                            x = (u - cx)*z/fx
-                            y = (v - cy)*z/fy
-                            point_sensor3d_h_list.append(np.array([x,y,z,1], dtype='f4'))
+                    # point_sensor3d_h_list = []
+                    # for v in range(depth_image.shape[0]):
+                    #     for u in range(depth_image.shape[1]):
+                    #         z =  depth_image[v, u]
+                    #         if z <= 1e-3 or z > 1e3:
+                    #             # print(f"{v},{u} invalid z:{z}")
+                    #             continue                            
+                    #         x = (u - cx)*z/fx
+                    #         y = (v - cy)*z/fy
+                    #         point_sensor3d_h_list.append(np.array([x,y,z,1], dtype='f4'))
 
-                    points_sensor3d_h = np.vstack(point_sensor3d_h_list, dtype='f4')
+                    # points_sensor3d_h = np.vstack(point_sensor3d_h_list, dtype='f4')
+
+                    v, u = np.indices(depth_image.shape, dtype='f4')
+                    mask = (depth_image > 1e-3) & (depth_image <= 1e3)
+                    x = (u[mask] - cx) * depth_image[mask] / fx
+                    y = (v[mask] - cy) * depth_image[mask] / fy
+                    z = depth_image[mask]
+                    ones = np.ones_like(z, dtype='f4')
+                    points_sensor3d_h = np.stack((x, y, z, ones), axis=1)
 
                 points_w_h = (T_w_sensor3d @ points_sensor3d_h.T).T
                 points_p_h = (utils.invert_transform(synchronized_T_w_p) @ points_w_h.T).T
@@ -464,61 +472,82 @@ class Dataset:
             image = cv2.imread(os.path.join(self.camera_data_lists[camera_data_idx].config['imagepath'], image_name)) # BGR
             height, width = image.shape[0], image.shape[1]
             K = self.camera_data_lists[camera_data_idx].K
-            fx, fy, cx, cy = K[0,0], K[1,1], K[0,2], K[1,2]
 
             undistorted_image = cv2.remap(image, self.camera_data_lists[camera_data_idx].remap1, self.camera_data_lists[camera_data_idx].remap2, cv2.INTER_LINEAR) # undistorted image
 
 
             cumulated_sensor3d_depth = np.zeros((undistorted_image.shape[0], undistorted_image.shape[1]), dtype='f4')
 
+
+            cumulated_p_c_h = (utils.invert_transform(synchronized_image_data['T_w_cam_idx']) @ cumulated_points_w_h.T).T
+            cumulated_p_c = cumulated_p_c_h[:, :3]
+            K_T = K.T
+            cumulated_z = cumulated_p_c[:, 2]
+            cumulated_p_c_in_norm_plane = cumulated_p_c @ K_T
+            cumulated_uv1 = (cumulated_p_c_in_norm_plane / cumulated_p_c_in_norm_plane[:,-1:]).round().astype(np.int64)
+            cumulated_u = cumulated_uv1[:, 0]
+            cumulated_v = cumulated_uv1[:, 1]
+            mask= (cumulated_z > 1e-3) & (cumulated_z <= 1e3) & (cumulated_u >=0) & (cumulated_u < width) & (cumulated_v >=0) & (cumulated_v < height)
+
+            cumulated_u = cumulated_u[mask]
+            cumulated_v = cumulated_v[mask]
+            cumulated_z = cumulated_z[mask]
+            cumulated_p_c = cumulated_p_c[mask]
+            cumulated_p_c_color = undistorted_image[cumulated_v, cumulated_u].astype("f4")/255.
+            cumulated_p_c_color = cumulated_p_c_color[:, [2, 1, 0]]
+
+            cumulated_sensor3d_depth[cumulated_sensor3d_depth == 0] = np.inf
+            np.minimum.at(cumulated_sensor3d_depth, (cumulated_v, cumulated_u), cumulated_z)
+            cumulated_sensor3d_depth[np.isinf(cumulated_sensor3d_depth)] = 0
+
+
+            # for u,v,z in zip(cumulated_u, cumulated_v, cumulated_z):
+
+            #     if cumulated_sensor3d_depth[v,u] == 0:
+            #         cumulated_sensor3d_depth[v,u] = z
+            #     else:
+            #         if cumulated_sensor3d_depth[v, u] > z:
+            #             cumulated_sensor3d_depth[v, u] = z
+
+
             if self.configs['output']['isSaveVisualizationDepthImage'] == True:
                 cumulated_sensor3d_depth_vis = undistorted_image.copy()
-                # for v in range(depth_image.shape[0]):
-                #     for u in range(depth_image.shape[1]):
-                #         z =  depth_image[v, u]
-                #         if z <= 1e-3 or z > 1e3:
-                #             # print(f"{v},{u} invalid z:{z}")
-                #             continue
+                depth_colors = utils.single_depths2colors(cumulated_z, 0.01, 50)
+                cumulated_sensor3d_depth_vis[cumulated_v, cumulated_u] = depth_colors
 
-                #         cumulated_sensor3d_depth_vis[v, u] = utils.single_depth2color(z, 0.01, 50)
-                # cv2.imshow("cumulated_sensor3d_depth_vis", cumulated_sensor3d_depth_vis)
-                # cv2.waitKey(0)
 
-            cumulated_p_c_list = []
-            cumulated_p_c_color_list = []
+            # for point_w_h in cumulated_points_w_h:
+            #     T_w_cam_idx = synchronized_image_data['T_w_cam_idx']
+            #     p_c_h = utils.invert_transform(T_w_cam_idx) @ point_w_h
+            #     z = p_c_h[2]
+            #     u = round(p_c_h[0] * fx / p_c_h[2] + cx)
+            #     v = round(p_c_h[1] * fy / p_c_h[2] + cy)
+            #     if z <= 1e-3 or z > 1e3:
+            #         # print(f"{v},{u} invalid z:{z}, p_c_h:{p_c_h}")
+            #         continue
+            #     if utils.isInImage(u, v, z, camera_config["resolution"][0], camera_config["resolution"][1]) == True:
+            #         c = undistorted_image[v,u].astype("f4")/255.
+            #         c = np.array([c[2], c[1], c[0]], dtype='f4')
 
-            for point_w_h in cumulated_points_w_h:
-                T_w_cam_idx = synchronized_image_data['T_w_cam_idx']
-                p_c_h = utils.invert_transform(T_w_cam_idx) @ point_w_h
-                z = p_c_h[2]
-                u = round(p_c_h[0] * fx / p_c_h[2] + cx)
-                v = round(p_c_h[1] * fy / p_c_h[2] + cy)
-                if z <= 1e-3 or z > 1e3:
-                    # print(f"{v},{u} invalid z:{z}, p_c_h:{p_c_h}")
-                    continue
-                if utils.isInImage(u, v, z, camera_config["resolution"][0], camera_config["resolution"][1]) == True:
-                    c = undistorted_image[v,u].astype("f4")/255.
-                    c = np.array([c[2], c[1], c[0]], dtype='f4')
+            #         cumulated_p_c_list.append(p_c_h[:3])
+            #         cumulated_p_c_color_list.append(c)
 
-                    cumulated_p_c_list.append(p_c_h[:3])
-                    cumulated_p_c_color_list.append(c)
+            #         if cumulated_sensor3d_depth[v, u] == 0:
+            #             cumulated_sensor3d_depth[v, u] = z
+            #             if self.configs['output']['isSaveVisualizationDepthImage'] == True:
+            #                 cumulated_sensor3d_depth_vis[v, u] = utils.single_depth2color(z, 0.01, 50)
 
-                    if cumulated_sensor3d_depth[v, u] == 0:
-                        cumulated_sensor3d_depth[v, u] = z
-                        if self.configs['output']['isSaveVisualizationDepthImage'] == True:
-                            cumulated_sensor3d_depth_vis[v, u] = utils.single_depth2color(z, 0.01, 50)
-
-                    else:
-                        if cumulated_sensor3d_depth[v, u] > z:
-                            cumulated_sensor3d_depth[v, u] = z
+            #         else:
+            #             if cumulated_sensor3d_depth[v, u] > z:
+            #                 cumulated_sensor3d_depth[v, u] = z
                             
-                            if self.configs['output']['isSaveVisualizationDepthImage'] == True:
-                                cumulated_sensor3d_depth_vis[v, u] = utils.single_depth2color(z, 0.01, 50)
+            #                 if self.configs['output']['isSaveVisualizationDepthImage'] == True:
+            #                     cumulated_sensor3d_depth_vis[v, u] = utils.single_depth2color(z, 0.01, 50)
 
 
 
-            cumulated_p_c = np.vstack(cumulated_p_c_list, dtype="f4")  
-            cumulated_p_c_color = np.vstack(cumulated_p_c_color_list, dtype="f4")  
+            # cumulated_p_c = np.vstack(cumulated_p_c_list, dtype="f4")  
+            # cumulated_p_c_color = np.vstack(cumulated_p_c_color_list, dtype="f4")  
 
 
 
@@ -574,68 +603,6 @@ class Dataset:
                             f"{q[0]:.15g} {q[1]:.15g} {q[2]:.15g} {q[3]:.15g}\n")
 
 
-    def loadVisualizationSample(self, ts, T_w_p):
-
-        synchronized_sensor3d_name_list = []
-        synchronized_sensor3d_name = getSynchronizedSensor(ts, self.sensor3d_names, self.data_source['sync_tol']) if self.sensor3d_names != None else None
-        synchronized_sensor3d_name_list.append(synchronized_sensor3d_name)
-
-        synchronized_image_name_list = []
-        if len(self.camera_data_lists) > 0:
-            
-            for camera_data in self.camera_data_lists:
-                synchronized_image_name = getSynchronizedSensor(ts, camera_data.image_names, self.data_source['sync_tol'])
-                if synchronized_image_name != None :
-                    synchronized_image_name_list.append(synchronized_image_name)
-
-    
-        if self.configs['visualization']['is_only_keep_sync_well_pose'] == True:
-            # if it is true, we only keep the pose that synchronized well with all the sensors
-            if synchronized_sensor3d_name is None or len(synchronized_image_name_list) < len(self.data_source['used_camera_idxes']):
-                return None
-        
-
-        datasample = DataSample(
-            t=ts,
-            pose=T_w_p,
-            sensor3d_name_list=synchronized_sensor3d_name,
-            image_name_list=synchronized_image_name_list
-        )
-
-        return datasample
-
-
-    def loadData(self, datasample):
-        
-        T_w_p = datasample.pose
-        T_p_l = np.array(self.data_source['T_pose_sensor3d'])
-        T_w_l = T_w_p @ T_p_l
-        if datasample.sensor3d_name != None and len(datasample.image_name_list) > 0 :
-            pcd = o3d.io.read_point_cloud(os.path.join(self.data_source['sensor3dpath'], datasample.sensor3d_name)) 
-            points = np.asarray(pcd.points, dtype="f4")        
-            points_h = np.hstack([points, np.ones((points.shape[0], 1), dtype=np.float32)])  # (N,4)
-
-            for datasample.image_name in datasample.image_name_list:
-                image = cv2.imread(os.path.join(self.data_source['imagepath'], datasample.image_name)) # BGR
-                image = cv2.remap(image, self.map1, self.map2, cv2.INTER_LINEAR) # undistorted image
-                # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) # RGB
-                # cv2.imshow("image", image)
-                # cv2.waitKey(0)
-                point_list = []
-                color_list = []
-                for p_l_h in points_h:
-                    T_lidar_cam = np.array(self.data_source['T_lidar_cam'], dtype="f4")
-                    p_c_h = utils.invert_transform(T_lidar_cam) @ p_l_h
-                    p_w_h = T_w_l @ p_l_h
-                    z = p_c_h[2]
-                    if z > 0:
-                        u = round(p_c_h[0] * fx / p_c_h[2] + cx)
-                        v = round(p_c_h[1] * fy / p_c_h[2] + cy)
-                        if utils.isInImage(u, v, z, self.data_source["resolution"][0], self.data_source["resolution"][1]) == True:
-                            c = image[v,u].astype("f4")/255.
-                            color = np.array([c[2], c[1], c[0]], dtype='f4')
-                            point_list.append(p_w_h)
-                            color_list.append(color)
 
     
 

@@ -30,6 +30,7 @@ dependencies = [
 mast3r = ["mast3r @ git+https://github.com/Nik-V9/mast3r"]
 prior-depth-anything = ["prior-depth-anything @ git+https://github.com/PengZai/Prior-Depth-Anything.git"]
 mapanything = ["mapanything @ git+https://github.com/facebookresearch/map-anything.git"]
+depth-anything-V2 = ["depth-anything-v2 @ git+https://github.com/PengZai/Depth-Anything-V2.git"]
 
 [tool.setuptools]
 # Disable automatic package discovery to avoid conflicts

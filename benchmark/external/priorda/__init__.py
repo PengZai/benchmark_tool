@@ -1,6 +1,6 @@
 import torch
 from prior_depth_anything import PriorDepthAnything
-
+import time
 
 
 
@@ -27,13 +27,8 @@ class PriorDepthAnythingWrapper(torch.nn.Module):
 
     def forward(self, frames):
 
-        num_frame = len(frames)
 
-        num_views_per_frame = len(frames[0])
         views = [view for frame in frames for view in frame]
-
-        batch_size_per_view, _, height, width = views[0]["undistorted_image"].shape
-
 
 
         res = []
@@ -53,6 +48,7 @@ class PriorDepthAnythingWrapper(torch.nn.Module):
             }
 
 
+            start = time.time()
 
             output = self.model.forward(
                 **input_view
@@ -60,11 +56,16 @@ class PriorDepthAnythingWrapper(torch.nn.Module):
 
             output = output.detach().cpu().squeeze(1).numpy()
 
+            end = time.time()
+
+            runtime = end - start
+
             # output = output.reshape((height, width))
             res.append({
                 'pred_depth': output,
                 'pred_depth_mask': output > 0,
-                'pred_T_w_c': view['T_w_c'].cpu().numpy()
+                'pred_T_w_c': view['T_w_c'].cpu().numpy(),
+                'runtime':runtime,
             })
 
         

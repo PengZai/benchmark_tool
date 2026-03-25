@@ -6,17 +6,17 @@ system:
   # start_idx: 25
   # end_idx: 40
   start_idx: 15
-  end_idx: 30
+  end_idx: 78
 
 output:
   isOutput: 1
-  path: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/wai_data2
+  path: /mnt/lboro_nas/personal/Zhipeng/wai_data/BotanicGarden_1018_00_3
   isSaveVisualizationDepthImage: 1
 
 
 
 visualization:
-  isVisualization: 0
+  isVisualization: 1
 
 
 cameras:
@@ -94,8 +94,8 @@ sensor3ds:
 data_source1:
   trajectorytype: liosam
   trajectory_path: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/lio_sam_save_map/traj_algin_with_colmap_timestamp.txt
-  used_sensor3d_idxes: [4,5]
-  num_cumulation: [0,0] # if there are two used sensor3ds, you need to specify two numbers of cumulation.
+  used_sensor3d_idxes: [0]
+  num_cumulation: [5] # if there are two used sensor3ds, you need to specify two numbers of cumulation.
   T_pose_used_sensor3d_idx0:
     - [0.9999528318,  0.0041506002, -0.0088119661,  0.136921769]
     - [-0.0041036871,  0.9999776894,  0.0051787272,  0.0011729773]

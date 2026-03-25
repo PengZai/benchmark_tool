@@ -58,13 +58,22 @@ def saveMetricsLogAndPointCloud(config, result_list):
 
             for k,v in result_dict['metrics'].items():
                 scene_result['metrics'][k].append(float(result_dict['metrics'][k]))
-                all_result['overall'][k].append(float(result_dict['metrics'][k]))
+                # all_result['overall'][k].append(float(result_dict['metrics'][k]))
         
 
         for k,v in scene_result['metrics'].items():
+                
+            if k in ['runtime', 'postprocess_time']:
+                scene_result['metrics'][k] = float(np.sum(v))
+            else:
                 scene_result['metrics'][k] = float(np.mean(v))
 
         all_result['result_per_scene'].append(scene_result)
+
+
+    for scene_result in all_result['result_per_scene']:
+        for k,v in scene_result['metrics'].items():
+            all_result['overall'][k].append(float(v))
 
     for k,v in all_result['overall'].items():
         all_result['overall'][k] = float(np.mean(v))
@@ -187,6 +196,7 @@ def benchmark(config):
 
     if isinstance(model, torch.nn.Module):
         model.to(device)
+        model.eval()
     # priorda = PriorDepthAnything(device=device)
     # priorda_coarse_only = PriorDepthAnything(device=device, coarse_only=True)
 
@@ -256,7 +266,8 @@ def benchmark(config):
                     result_dict['pred'] = {
                         'depth': pred_depth,
                         'depth_mask': pred_depth_mask,
-                        'T_w_c': res['pred_T_w_c'][batch_idx]
+                        'T_w_c': res['pred_T_w_c'][batch_idx],
+                        'runtime': res['runtime']
                     }
                     
                     result_dict['GT'] = {
@@ -293,6 +304,8 @@ def benchmark(config):
                 comp_mean, comp_median = metrics.pointcloud_completion(GT_point_cloud, pred_pts3d)
                 
                 result_dict['metrics'] = {
+                        'runtime': result_dict['pred']['runtime'],
+                        'postprocess_time': result_dict['pred']['postprocess_time'],
                         'num_valid_pred': result_dict['pred']['depth_mask'].sum(),
                         'num_valid_input_depth': result_dict['GT']['input_depth_mask'].sum(),
                         'num_valid_GT_depth': result_dict['GT']['GT_depth_mask'].sum(),

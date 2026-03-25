@@ -8,6 +8,7 @@ from dust3r.image_pairs import make_pairs
 
 from mast3r.cloud_opt.sparse_ga import sparse_global_alignment
 from mast3r.model import load_model
+import time
 
 
 
@@ -90,6 +91,8 @@ class MASt3RSGWrapper(torch.nn.Module):
             images, scene_graph=self.scene_graph, prefilter=None, symmetrize=True
         )
 
+        start = time.time()
+
         with torch.enable_grad():
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=FutureWarning)
@@ -120,6 +123,10 @@ class MASt3RSGWrapper(torch.nn.Module):
         c2w_poses = scene.get_im_poses()
         pts3d, depths, confs = scene.get_dense_pts3d()
         
+        end = time.time()
+
+        runtime = end - start
+
         res = []
         for frame_idx in range(num_frame):
 
@@ -132,6 +139,7 @@ class MASt3RSGWrapper(torch.nn.Module):
                     'pred_depth': pred_depth,
                     'pred_depth_mask': pred_depth_mask, # this 1 threshold according to scene.show() visualization setting
                     'pred_T_w_c': pred_T_w_c,
+                    'runtime': runtime / float(num_frame) # unit second
                 }
             )
 

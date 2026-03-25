@@ -30,6 +30,10 @@ MODEL_CONFIGS = {
         "module": "benchmark.external.multi_view_stereo",
         "class_name": "MVSWrapper",
     },
+    "depth_anything_v2": {
+        "module": "benchmark.external.depth_anything_v2",
+        "class_name": "DepthAnythingV2Wrapper",
+    },
 }
 
 
