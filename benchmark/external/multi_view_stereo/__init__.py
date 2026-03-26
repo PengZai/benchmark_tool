@@ -1,6 +1,8 @@
 from . import multi_view_stereo_pybind
 import numpy as np
 import cv2 
+import time
+
 
 class MVSWrapper():
     def __init__(
@@ -99,8 +101,14 @@ class MVSWrapper():
 
 
         
+        start = time.time()
+
         self.model.scene_reconstruction(images)
         self.model.consistency_check(images)
+
+        end = time.time()
+
+        runtime = end - start
 
         res = []
         for frame_idx in range(num_frame):
@@ -113,8 +121,8 @@ class MVSWrapper():
                 {
                     'pred_depth':depth,
                     'pred_depth_mask': (depth > 0), # this 1 threshold according to scene.show() visualization setting
-                    'pred_T_w_c': view['T_w_c'].cpu().numpy()
-
+                    'pred_T_w_c': view['T_w_c'].cpu().numpy(),
+                    'runtime': runtime / float(num_frame)
                 }
             )
 

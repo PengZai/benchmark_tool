@@ -23,3 +23,5 @@ test_resolution: [518, 336]
 postprocessing:
   isAffineRefineDepthWithInputDepth: false
   isConsistencyCheck: true
+  isJustCompareNearDistance: false
+  maximum_near_distance: 10 # unit metter

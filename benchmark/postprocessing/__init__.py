@@ -8,6 +8,7 @@ def simple_postprocess(config, result_list):
     # AffineRefinefitting
     for result_list_per_sub_scene in result_list:
 
+        postprocess_time = 0
         start = time.time()
         for result_dict in result_list_per_sub_scene:
             
@@ -15,23 +16,34 @@ def simple_postprocess(config, result_list):
             if config.model.postprocessing.isAffineRefineDepthWithInputDepth == True:
 
                 result_dict['pred']['depth'] = AffineRefinefitting(result_dict['GT']['input_depth'], result_dict['pred']['depth'], result_dict['GT']['input_depth_mask'] & result_dict['pred']['depth_mask'])
-                result_dict['pred']['depth_mask'] = result_dict['pred']['depth_mask'] & (result_dict['pred']['depth'] > 0).squeeze()
                    
+            if config.model.postprocessing.isJustCompareNearDistance == True:
 
+                result_dict['pred']['depth_mask'] = result_dict['pred']['depth_mask'] & ((result_dict['pred']['depth'] <= config.model.postprocessing.maximum_near_distance) & ((result_dict['pred']['depth'] > 0))).squeeze()
+
+            else:
+                result_dict['pred']['depth_mask'] = result_dict['pred']['depth_mask'] & (result_dict['pred']['depth'] > 0).squeeze()
+
+
+        end = time.time()
+        for result_dict in result_list_per_sub_scene:
             result_dict['pred']['pts3d'] = make_pts3d(result_dict['pred']['depth'], result_dict['GT']['intrinsics'], result_dict['pred']['depth_mask'])
-
+        
+        
+        postprocess_time += end - start
+        start = time.time()
         if config.model.postprocessing.isConsistencyCheck == True:
 
             consistency_check(result_list_per_sub_scene)
 
-
         end = time.time()
-        postprocess_time = end - start
+
+        postprocess_time += end - start
 
         for result_dict in result_list_per_sub_scene:
 
             result_dict['pred']['postprocess_time'] = postprocess_time/float(len(result_list_per_sub_scene))
-            
+
 
 def AffineRefinefitting(gt, pred, mask):
 
