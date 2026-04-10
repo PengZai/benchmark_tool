@@ -35,3 +35,6 @@ depth-anything-V2 = ["depth-anything-v2 @ git+https://github.com/PengZai/Depth-A
 [tool.setuptools]
 # Disable automatic package discovery to avoid conflicts
 packages = ["benchmark"]
+
+[tool.setuptools.package-data]
+benchmark = ["py.typed"]

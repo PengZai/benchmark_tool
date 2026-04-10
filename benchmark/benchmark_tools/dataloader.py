@@ -8,7 +8,7 @@ import os
 import numpy as np
 from PIL import Image
 import PIL
-from benchmark.utils.cropping import (
+from benchmark.benchmark_tools.utils.cropping import (
     crop_resize_if_necessary
 )
 

@@ -3,14 +3,14 @@ import json
 from omegaconf import DictConfig, OmegaConf
 import hydra
 import os
-from benchmark.utils import updateConfig
-from benchmark.dataloader import CameraDataset
+from benchmark.benchmark_tools.utils import updateConfig
+from benchmark.benchmark_tools.dataloader import CameraDataset
 import open3d as o3d
 import numpy as np
 import cv2
-from benchmark import metrics
+from benchmark.benchmark_tools import metrics
 from collections import defaultdict
-from benchmark.postprocessing import make_pts3d
+from benchmark.benchmark_tools.postprocessing import make_pts3d
 from benchmark.dataset_tools.utils import single_depths2colors
 
 

@@ -1,15 +1,15 @@
 import json
 import os
-from benchmark.dataloader import Testdataset
+from benchmark.benchmark_tools.dataloader import Testdataset
 from torch.utils.data import DataLoader
 import torch
-from benchmark import metrics
-from benchmark.external import init_model
+from benchmark.benchmark_tools import metrics
+from benchmark.benchmark_tools.external import init_model
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import numpy as np
-from benchmark.postprocessing import simple_postprocess
-from benchmark.utils import updateConfig, saveMetricsLogAndResults
+from benchmark.benchmark_tools.postprocessing import simple_postprocess
+from benchmark.benchmark_tools.utils import updateConfig, saveMetricsLogAndResults
 
 
 
