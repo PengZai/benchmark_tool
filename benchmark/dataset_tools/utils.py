@@ -2,8 +2,11 @@ from scipy.spatial.transform import Rotation as Rot
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
+
 import cv2
 from decimal import Decimal, getcontext
+
 
 getcontext().prec = 30  # enough for seconds + 9 fractional digits
 
@@ -40,18 +43,124 @@ def single_depth2color(depth, min_depth, max_depth):
     return (int(color[2]), int(color[1]), int(color[0]))
 
 
-def depth2color(depth, min_value = 0.3, max_value = 255):
+def depth2color(
+    depth,
+    cmap_name="Spectral_r",
+    invalid_color=(0, 0, 0),
+    max_depth = 10,
+    min_depth = 0,
+):
+    """
+    Convert inverse depth to depth using:
+        mask = inv_depth > 0
+        depth = 0
+        depth[mask] = 1.0 / inv_depth[mask]
 
-    valid_depth = depth > min_value
-    inv_depth = np.zeros_like(depth)
-    inv_depth[valid_depth] = 1.0 / (depth[valid_depth])  
-    vis = cv2.normalize(inv_depth, None, min_value, max_value, cv2.NORM_MINMAX)
-    vis = vis.astype(np.uint8).squeeze()
+    Then colorize and save as an RGB image.
 
-    cmap = matplotlib.colormaps.get_cmap('Spectral_r')
-    vis = (cmap(vis)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
+    Args:
+        inv_depth: numpy array of shape (H, W) or (1, H, W)
+        save_path: output image path, e.g. "depth_color.png"
+        cmap_name: matplotlib colormap name
+        invalid_color: RGB tuple for invalid pixels
+    """
 
-    return vis
+    mask = (depth <= max_depth) & (depth >= min_depth) & (depth > 0)
+    inv_depth = np.zeros_like(depth) 
+    inv_depth[mask] = 1.0 / depth[mask]
+
+    vmin = inv_depth[mask].min()
+    vmax = inv_depth[mask].max()
+
+    cmap = matplotlib.colormaps.get_cmap(cmap_name)
+    norm = Normalize(vmin=vmin, vmax=vmax)
+
+    colored = cmap(norm(inv_depth))            # RGBA in [0, 1]
+    rgb = (colored[..., :3] * 255).astype(np.uint8)
+    bgr = rgb[..., ::-1].copy()
+
+    bgr[~mask] = np.array(invalid_color, dtype=np.uint8)
+
+    return bgr
+
+def voxel_downsample_np(points, voxel_size=0.05):
+    """
+    points: (N, 3) or (N, C), first 3 columns must be xyz
+    returns: downsampled array with one averaged point per voxel
+    """
+    xyz = points[:, :3]
+    voxel_idx = np.floor(xyz / voxel_size).astype(np.int64)
+
+    _, inverse = np.unique(voxel_idx, axis=0, return_inverse=True)
+    num_voxels = inverse.max() + 1
+
+    counts = np.bincount(inverse)
+
+    down = np.zeros((num_voxels, points.shape[1]), dtype=np.float64)
+    for j in range(points.shape[1]):
+        down[:, j] = np.bincount(inverse, weights=points[:, j]) / counts
+
+    return down
+
+
+def depth_range_by_ratio(depth, keep=0.98):
+    """
+    Return the central depth range containing `keep` fraction of valid depth values.
+
+    Args:
+        depth: numpy array
+        keep: float in (0, 1], e.g. 0.95 means central 95%
+
+    Returns:
+        d_low, d_high
+    """
+    depth = np.asarray(depth, dtype=np.float32)
+
+    if not (0 < keep <= 1):
+        raise ValueError(f"`keep` must be in (0, 1], got {keep}")
+
+    valid = depth[np.isfinite(depth) & (depth > 0)]
+
+    if valid.size == 0:
+        raise ValueError("No valid depth pixels found")
+
+    tail = (1.0 - keep) / 2.0
+    q_low = 100.0 * tail
+    q_high = 100.0 * (1.0 - tail)
+
+    d_low, d_high = np.percentile(valid, [q_low, q_high])
+    return d_low, d_high
+
+
+def save_depth_histogram(
+    depth,
+    save_path="depth_hist.png",
+    min_depth=0.0,
+    max_depth=10.0,
+):
+    depth = np.asarray(depth, dtype=np.float32)
+
+    mask = np.isfinite(depth) & (depth > 0) & (depth >= min_depth) & (depth <= max_depth)
+    valid_depth = depth[mask].ravel()
+
+    if valid_depth.size == 0:
+        raise ValueError("No valid depth pixels found")
+
+    # Let NumPy decide the bin edges automatically
+    bin_edges = np.histogram_bin_edges(valid_depth, bins="auto")
+
+    # Compute histogram explicitly
+    counts, _ = np.histogram(valid_depth, bins=bin_edges)
+
+    plt.figure(figsize=(6, 4))
+    plt.stairs(counts, bin_edges)
+    plt.xlabel("Depth")
+    plt.ylabel("Count")
+    plt.title("Depth Histogram")
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=200)
+    plt.close()
+
 
 def invert_transform(T):
     R = T[:3, :3]

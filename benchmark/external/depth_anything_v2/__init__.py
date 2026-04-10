@@ -51,14 +51,18 @@ class DepthAnythingV2Wrapper(torch.nn.Module):
                 **input_view
             ) 
 
-            detph = 1/(inv_depth+1e-9)
-            detph = detph.detach().cpu().squeeze(1).numpy()
+            # detph = 1/(inv_depth+1e-9)
+            mask = inv_depth > 0
+            depth = torch.zeros_like(inv_depth)
+            depth[mask] = 1.0 / inv_depth[mask]
+        
+            depth = depth.detach().cpu().squeeze(1).numpy()
              
             end = time.time()
             runtime = end - start
             res.append({
-                'pred_depth': detph,
-                'pred_depth_mask': (detph > 0) & (detph < 1e3),
+                'pred_depth': depth,
+                'pred_depth_mask': depth > 0,
                 'pred_T_w_c': view['T_w_c'].cpu().numpy(),
                 'runtime': runtime,
             })

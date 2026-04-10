@@ -8,11 +8,19 @@ class MapAnythingWrapper(torch.nn.Module):
     def __init__(
         self,
         name,
+        isInputIntrinsics,
+        isInputCameraPoses,
+        isInputDepthZ,
         **kwargs,
     ):
         super().__init__()
 
         self.name = name
+
+        self.isInputIntrinsics = isInputIntrinsics
+        self.isInputCameraPoses = isInputCameraPoses
+        self.isInputDepthZ = isInputDepthZ
+
 
         self.model = MapAnything(name, **kwargs)
 
@@ -29,14 +37,23 @@ class MapAnythingWrapper(torch.nn.Module):
 
         input_views = []
         for view in views:
-            input_views.append({
+
+
+            input_view = {
                 'img':view['undistorted_image'],
-                'intrinsics': view['intrinsics'],
-                'camera_poses': view['T_w_c'],
-                'depth_z': view['input_depth'].squeeze(1),
                 "data_norm_type": view['data_norm_type'],
                 'is_metric_scale': view['is_metric_scale'], 
-            })
+            }
+
+            if self.isInputIntrinsics:
+                input_view['intrinsics'] = view['intrinsics']
+            if self.isInputCameraPoses:
+                input_view['camera_poses'] = view['T_w_c']
+            if self.isInputDepthZ:
+                input_view['depth_z'] = view['input_depth'].squeeze(1),
+
+
+            input_views.append(input_view)
 
         start = time.time()
 

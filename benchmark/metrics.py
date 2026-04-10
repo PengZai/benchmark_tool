@@ -44,7 +44,7 @@ def valid_mean(arr, mask, axis=None, keepdims=np._NoValue):
     return valid_mean, is_valid
 
 
-def thresh_inliers(gt, pred, thresh=1.03, mask=None, output_scaling_factor=1.0):
+def rel_thresh_inliers(gt, pred, thresh=1.03, mask=None, output_scaling_factor=1.0):
     """Computes the inlier (=error within a threshold) ratio for a predicted and ground truth dense map of size H x W x C.
 
     Args:
@@ -143,21 +143,48 @@ def m_ae(gt, pred, mask=None, output_scaling_factor=1.0):
     else:
         combined_mask = gt_norm_valid
 
-    m_ae, valid = valid_mean(error_norm, combined_mask)
-
+    # m_ae, valid = valid_mean(error_norm, combined_mask)
+    valid_error_norm = error_norm[combined_mask]
+    m_ae = np.mean(np.abs(valid_error_norm))
 
     m_ae = m_ae * output_scaling_factor
-    m_ae = m_ae if valid else np.nan
+    # m_ae = m_ae if valid else np.nan
 
     
     return m_ae
 
 
+def abs_thresh_inliers(gt, pred, thresh=0.03, mask=None, output_scaling_factor=1.0):
+
+    error_norm = np.linalg.norm(pred - gt, axis=-1)
+    gt_norm = np.linalg.norm(gt, axis=-1)
+
+    gt_norm_valid = gt_norm > 0
 
 
-def pointcloud_accuracy(gt_points, rec_points, gt_normals=None, rec_normals=None):
+    if mask is not None:
+        combined_mask = mask & gt_norm_valid
+    else:
+        combined_mask = gt_norm_valid
+
+    valid_error_norm = np.abs(error_norm[mask])
+    num_inlier = (valid_error_norm <= thresh).sum()
+
+    inlier_ratio = num_inlier / combined_mask.sum()
+    inlier_ratio = inlier_ratio * output_scaling_factor
+
+    return inlier_ratio
+
+
+
+
+def pointcloud_accuracy(gt_points, rec_points, thresh=0.03, gt_normals=None, rec_normals=None):
     gt_points_kd_tree = KDTree(gt_points)
     distances, idx = gt_points_kd_tree.query(rec_points, workers=-1)
+    
+    num_inlier = (distances <= thresh).sum()
+    acc_inlier_ratio = num_inlier / distances.shape[0]
+
     acc = np.mean(distances)
 
     acc_median = np.median(distances)
@@ -168,12 +195,21 @@ def pointcloud_accuracy(gt_points, rec_points, gt_normals=None, rec_normals=None
 
         return acc, acc_median, np.mean(normal_dot), np.median(normal_dot)
 
-    return acc, acc_median
+    return acc, acc_median, acc_inlier_ratio
 
 
-def pointcloud_completion(gt_points, rec_points, gt_normals=None, rec_normals=None):
+
+
+
+def pointcloud_completion(gt_points, rec_points, thresh = 0.03, gt_normals=None, rec_normals=None):
     gt_points_kd_tree = KDTree(rec_points)
     distances, idx = gt_points_kd_tree.query(gt_points, workers=-1)
+
+
+    num_inlier = (distances <= thresh).sum()
+    comp_inlier_ratio = num_inlier / distances.shape[0]
+
+
     comp = np.mean(distances)
     comp_median = np.median(distances)
 
@@ -183,7 +219,7 @@ def pointcloud_completion(gt_points, rec_points, gt_normals=None, rec_normals=No
 
         return comp, comp_median, np.mean(normal_dot), np.median(normal_dot)
 
-    return comp, comp_median
+    return comp, comp_median, comp_inlier_ratio
 
 
 

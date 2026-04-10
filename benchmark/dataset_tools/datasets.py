@@ -7,6 +7,7 @@ import cv2
 from benchmark.dataset_tools import utils
 from pathlib import Path
 import json
+from scipy.spatial import cKDTree
 
 from pytransform3d.transformations import (
     transform_from_pq,
@@ -90,6 +91,83 @@ class Dataset:
 
         
         self.make_output_directories()
+
+
+    def filter_depth_by_knn(
+        self,
+        cumulated_u_for_depthimage,
+        cumulated_v_for_depthimage,
+        cumulated_z_for_depthimage,
+        k=3,
+        base_tol=0.02,
+        mad_scale=2.5,
+    ):
+        """
+        Filter (u, v, z) points by local depth consistency in image space.
+
+        Args:
+            cumulated_u_for_depthimage: (N,) array of u coordinates
+            cumulated_v_for_depthimage: (N,) array of v coordinates
+            cumulated_z_for_depthimage: (N,) array of depth values
+            k: number of nearest neighbors in image plane
+            base_tol: minimum allowed depth difference
+            mad_scale: robustness factor for adaptive tolerance
+
+        Returns:
+            good_u: filtered u coordinates
+            good_v: filtered v coordinates
+            good_z: filtered depth values
+        """
+        u = np.asarray(cumulated_u_for_depthimage)
+        v = np.asarray(cumulated_v_for_depthimage)
+        z = np.asarray(cumulated_z_for_depthimage)
+
+        if not (len(u) == len(v) == len(z)):
+            raise ValueError("u, v, z must have the same length")
+
+        if len(u) == 0:
+            return u.copy(), v.copy(), z.copy()
+
+        if len(u) == 1:
+            return u.copy(), v.copy(), z.copy()
+
+        uv = np.column_stack((u, v)).astype(np.float32)
+        zf = z.astype(np.float32)
+
+        tree = cKDTree(uv)
+
+        # +1 because the closest point is the point itself
+        k_eff = min(k + 1, len(uv))
+        dist, idx = tree.query(uv, k=k_eff, workers=-1)
+
+        # Ensure 2D output
+        if idx.ndim == 1:
+            idx = idx[:, None]
+            dist = dist[:, None]
+
+        # Remove self-neighbor
+        nn_idx = idx[:, 1:]
+
+        if nn_idx.shape[1] == 0:
+            return u.copy(), v.copy(), z.copy()
+
+        neighbor_z = zf[nn_idx]  # shape (N, k)
+
+        # Median depth of neighbors
+        median_z = np.median(neighbor_z, axis=1)
+
+        # Robust spread estimate (MAD)
+        mad = np.median(np.abs(neighbor_z - median_z[:, None]), axis=1)
+        adaptive_tol = np.maximum(base_tol, mad_scale * 1.4826 * mad)
+
+        keep_mask = np.abs(zf - median_z) <= adaptive_tol
+
+        good_u = u[keep_mask]
+        good_v = v[keep_mask]
+        good_z = z[keep_mask]
+
+        return good_u, good_v, good_z
+    
         
     def make_output_directories(self):
 
@@ -415,10 +493,17 @@ class Dataset:
                 synchronized_T_w_p = sample['T_w_p']
                 T_w_sensor3d = synchronized_sensor3d_data['T_w_sensor3d']
                 suffix = Path(sensor3d_name).suffix
-
+                scale_transformation_matrix = np.array([
+                    [sensor3d_config_i['xyz_scale_factor'][0],0,0,0],
+                    [0,sensor3d_config_i['xyz_scale_factor'][1],0,0],
+                    [0,0,sensor3d_config_i['xyz_scale_factor'][2],0],
+                    [0,0,0,1]], dtype="f4")
                 if sensor3d_config_i['sensor3dtype'] == "pointcloud":
                     if suffix == ".pcd":
                         pcd = o3d.io.read_point_cloud(os.path.join(sensor3d_config_i['sensor3dpath'], sensor3d_name)) 
+                        if sensor3d_config_i['down_sample_rate'] < 1.0:
+                            pcd = pcd.random_down_sample(sensor3d_config_i['down_sample_rate'])
+
                         points_sensor3d = np.asarray(pcd.points, dtype="f4")
                         points_sensor3d_h = np.hstack([points_sensor3d, np.ones((points_sensor3d.shape[0], 1), dtype=np.float32)])  # (N,4)
 
@@ -453,21 +538,25 @@ class Dataset:
                     z = depth_image[mask]
                     ones = np.ones_like(z, dtype='f4')
                     points_sensor3d_h = np.stack((x, y, z, ones), axis=1)
+                    if sensor3d_config_i['down_sample_rate'] < 1.0:
+                        points_sensor3d_h = utils.voxel_downsample_np(points_sensor3d_h, sensor3d_config_i['down_sample_rate'])
 
                 points_w_h = (T_w_sensor3d @ points_sensor3d_h.T).T
-                points_p_h = (utils.invert_transform(synchronized_T_w_p) @ points_w_h.T).T
                 cumulated_points_w_h_list.append(points_w_h)
             
 
         cumulated_points_w_h = np.vstack(cumulated_points_w_h_list, dtype="f4")  
-        cumulated_points_p_h =  (utils.invert_transform(synchronized_T_w_p) @ cumulated_points_w_h.T).T
 
-        sample['cumulated_points_p'] = cumulated_points_p_h[:, :3]
+        # cumulated_points_p_h =  (utils.invert_transform(synchronized_T_w_p) @ cumulated_points_w_h.T).T
+        # sample['cumulated_points_p'] = cumulated_points_p_h[:, :3]
 
+        maximum_depth_for_depthimage = self.configs['system']['maximum_depth_for_depthimage']
+        minimum_depth_for_depthimage = self.configs['system']['minimum_depth_for_depthimage']
+        maximum_z_for_pointcloud = self.configs['system']['maximum_z_for_pointcloud']
+        minimum_z_for_pointcloud = self.configs['system']['minimum_z_for_pointcloud']
 
         for camera_data_idx, synchronized_image_data in enumerate(sample['synchronized_image_data_list']):
             
-            camera_config = self.camera_data_lists[camera_data_idx].config
             image_name = synchronized_image_data['name']
             image = cv2.imread(os.path.join(self.camera_data_lists[camera_data_idx].config['imagepath'], image_name)) # BGR
             height, width = image.shape[0], image.shape[1]
@@ -479,7 +568,7 @@ class Dataset:
             cumulated_sensor3d_depth = np.zeros((undistorted_image.shape[0], undistorted_image.shape[1]), dtype='f4')
 
 
-            cumulated_p_c_h = (utils.invert_transform(synchronized_image_data['T_w_cam_idx']) @ cumulated_points_w_h.T).T
+            cumulated_p_c_h = (scale_transformation_matrix @ utils.invert_transform(synchronized_image_data['T_w_cam_idx']) @ cumulated_points_w_h.T).T
             cumulated_p_c = cumulated_p_c_h[:, :3]
             K_T = K.T
             cumulated_z = cumulated_p_c[:, 2]
@@ -487,18 +576,38 @@ class Dataset:
             cumulated_uv1 = (cumulated_p_c_in_norm_plane / cumulated_p_c_in_norm_plane[:,-1:]).round().astype(np.int64)
             cumulated_u = cumulated_uv1[:, 0]
             cumulated_v = cumulated_uv1[:, 1]
-            mask= (cumulated_z > 1e-3) & (cumulated_z <= 1e3) & (cumulated_u >=0) & (cumulated_u < width) & (cumulated_v >=0) & (cumulated_v < height)
 
-            cumulated_u = cumulated_u[mask]
-            cumulated_v = cumulated_v[mask]
-            cumulated_z = cumulated_z[mask]
-            cumulated_p_c = cumulated_p_c[mask]
-            cumulated_p_c_color = undistorted_image[cumulated_v, cumulated_u].astype("f4")/255.
+            mask_for_depthimage = (cumulated_z > minimum_depth_for_depthimage) & (cumulated_z <= maximum_depth_for_depthimage) & (cumulated_u >=0) & (cumulated_u < width) & (cumulated_v >=0) & (cumulated_v < height)
+            mask_for_pointcloud = (cumulated_z > minimum_z_for_pointcloud) & (cumulated_z <= maximum_z_for_pointcloud) & (cumulated_u >=0) & (cumulated_u < width) & (cumulated_v >=0) & (cumulated_v < height)
+
+            cumulated_u_for_depthimage = cumulated_u[mask_for_depthimage]
+            cumulated_v_for_depthimage = cumulated_v[mask_for_depthimage]
+            cumulated_z_for_depthimage = cumulated_z[mask_for_depthimage]
+
+            cumulated_u_for_pointcloud = cumulated_u[mask_for_pointcloud]
+            cumulated_v_for_pointcloud = cumulated_v[mask_for_pointcloud]
+
+            cumulated_p_c = cumulated_p_c[mask_for_pointcloud]
+            cumulated_p_c_color = undistorted_image[cumulated_v_for_pointcloud, cumulated_u_for_pointcloud].astype("f4")/255.
             cumulated_p_c_color = cumulated_p_c_color[:, [2, 1, 0]]
 
             cumulated_sensor3d_depth[cumulated_sensor3d_depth == 0] = np.inf
-            np.minimum.at(cumulated_sensor3d_depth, (cumulated_v, cumulated_u), cumulated_z)
+            np.minimum.at(cumulated_sensor3d_depth, (cumulated_v_for_depthimage, cumulated_u_for_depthimage), cumulated_z_for_depthimage)
             cumulated_sensor3d_depth[np.isinf(cumulated_sensor3d_depth)] = 0
+            mask_for_depthimage = cumulated_sensor3d_depth > 0
+            cumulated_v_for_depthimage, cumulated_u_for_depthimage = np.where(mask_for_depthimage)
+            cumulated_z_for_depthimage = cumulated_sensor3d_depth[mask_for_depthimage]
+
+            if self.configs['system']['isFilterDepthByKNN'] == True:
+                cumulated_u_for_depthimage, cumulated_v_for_depthimage, cumulated_z_for_depthimage = self.filter_depth_by_knn(
+                    cumulated_u_for_depthimage, cumulated_v_for_depthimage, cumulated_z_for_depthimage,
+                    k=self.configs['system']['K_for_filterdepth'],
+                    )
+
+            cumulated_sensor3d_depth = np.zeros((undistorted_image.shape[0], undistorted_image.shape[1]), dtype='f4')
+            cumulated_sensor3d_depth[cumulated_v_for_depthimage, cumulated_u_for_depthimage] = cumulated_z_for_depthimage
+
+            # cumulated_sensor3d_depth[cumulated_v, cumulated_u] = cumulated_z
 
 
             # for u,v,z in zip(cumulated_u, cumulated_v, cumulated_z):
@@ -512,8 +621,8 @@ class Dataset:
 
             if self.configs['output']['isSaveVisualizationDepthImage'] == True:
                 cumulated_sensor3d_depth_vis = undistorted_image.copy()
-                depth_colors = utils.single_depths2colors(cumulated_z, 0.01, 50)
-                cumulated_sensor3d_depth_vis[cumulated_v, cumulated_u] = depth_colors
+                depth_colors = utils.single_depths2colors(cumulated_z_for_depthimage, self.configs['output']['minimum_depth_for_vis_depthimage'], self.configs['output']['maximum_depth_for_vis_depthimage'])
+                cumulated_sensor3d_depth_vis[cumulated_v_for_depthimage, cumulated_u_for_depthimage] = depth_colors
 
 
             # for point_w_h in cumulated_points_w_h:

@@ -1,0 +1,3 @@
+[submodule "thirdparty/Depth-Enhancement-With-Sparse-Geometry-Points"]
+	path = thirdparty/Depth-Enhancement-With-Sparse-Geometry-Points
+	url = git@github.com:PengZai/Depth-Enhancement-With-Sparse-Geometry-Points.git

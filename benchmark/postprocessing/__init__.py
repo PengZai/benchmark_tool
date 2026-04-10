@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from dataset_tools.utils import invert_transform
+from benchmark.dataset_tools.utils import invert_transform
 import time
 
 def simple_postprocess(config, result_list):
@@ -24,6 +24,7 @@ def simple_postprocess(config, result_list):
             else:
                 result_dict['pred']['depth_mask'] = result_dict['pred']['depth_mask'] & (result_dict['pred']['depth'] > 0).squeeze()
 
+            # print(f"Postprocessing : {result_dict['pred']['depth_mask'].sum()} valid pixels after postprocessing.")
 
         end = time.time()
         for result_dict in result_list_per_sub_scene:
@@ -75,19 +76,30 @@ def AffineRefinefitting(gt, pred, mask):
         return refine_pred.reshape(pred.shape)
     
 
-def make_pts3d(depth, K_matrix, mask):
-
-    pts3d = np.zeros((depth.shape[0], depth.shape[1], 3), dtype=depth.dtype)
     
-    for v in range(depth.shape[0]):
-        for u in range(depth.shape[1]):
-            z =  depth[v, u][0]
-            if mask[v,u] == False:
-                continue                            
-            x = (u - K_matrix[0,2])*z/K_matrix[0,0]
-            y = (v - K_matrix[1,2])*z/K_matrix[1,1]
 
-            pts3d[v,u] = np.array([x,y,z], dtype=depth.dtype)
+def make_pts3d(depth, K_matrix, mask):
+    # If depth is HxWx1, squeeze it to HxW
+    if depth.ndim == 3 and depth.shape[-1] == 1:
+        depth_2d = depth[..., 0]
+    else:
+        depth_2d = depth
+
+    h, w = depth_2d.shape
+
+    fx = K_matrix[0, 0]
+    fy = K_matrix[1, 1]
+    cx = K_matrix[0, 2]
+    cy = K_matrix[1, 2]
+
+    u, v = np.meshgrid(np.arange(w), np.arange(h))
+
+    x = (u - cx) * depth_2d / fx
+    y = (v - cy) * depth_2d / fy
+    z = depth_2d
+
+    pts3d = np.stack((x, y, z), axis=-1).astype(depth.dtype)
+
     
     return pts3d
 

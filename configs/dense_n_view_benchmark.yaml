@@ -8,11 +8,12 @@ batch_size: 2
 num_view: 4
 used_camera_idx_per_view: [0]
 dataset: BotanicGarden
-scene_name: BotanicGarden_1018_00_32
+scene_name: BotanicGarden_1018_00_32_test_4
 root_data_dir: ${machine.root_data_dir}
 root_pretrained_checkpoints_dir: ${machine.root_pretrained_checkpoints_dir}
 root_experiments_dir: ${machine.root_experiments_dir}
-GT_geometry_dir_name: livox_lidar_c5
+GT_geometry_dir_name: livox_lidar_c10
 input_pose_name: Twc_in_colmap_traj.txt
-input_geometry_dir: colmap_sparse_point_in_left_rgb_coordinate_c0_colmap_sparse_point_in_right_rgb_coordinate_c0
+input_geometry_dir: livox_lidar_downsampled_40_percent_c0
+# input_geometry_dir: livox_lidar_c10
 

@@ -487,3 +487,81 @@ def crop_resize_if_necessary(
     if additional_quantities is not None:
         output += (additional_quantities,)
     return output
+
+
+
+def crop_resize_if_necessary(
+        image,
+        resolution,
+        depthmap,
+        intrinsics,
+        additional_quantities=None,
+    ):
+        """
+        Process an image by downsampling and cropping as needed to match the target resolution.
+
+        This method performs the following operations:
+        1. Converts the image to PIL.Image if necessary
+        2. Crops the image centered on the principal point if requested
+        3. Downsamples the image using high-quality Lanczos filtering
+        4. Performs final cropping to match the target resolution
+
+        Args:
+            image (numpy.ndarray or PIL.Image.Image): Input image to be processed
+            resolution (tuple): Target resolution as (width, height)
+            depthmap (numpy.ndarray): Depth map corresponding to the image
+            intrinsics (numpy.ndarray): Camera intrinsics matrix (3x3)
+            additional_quantities (dict, optional): Additional image-related data to be processed
+                                                   alongside the main image with nearest interpolation. Defaults to None.
+
+        Returns:
+            tuple: Processed image, depthmap, and updated intrinsics matrix.
+                  If additional_quantities is provided, it returns those as well.
+        """
+        if not isinstance(image, PIL.Image.Image):
+            image = PIL.Image.fromarray(image)
+
+        
+
+        # Get the target resolution for re-scaling
+        target_rescale_resolution = np.array(resolution)
+        
+
+        # High-quality Lanczos down-scaling if necessary
+        image, depthmap, intrinsics, additional_quantities = (
+            rescale_image_and_other_optional_info(
+                image=image,
+                output_resolution=target_rescale_resolution,
+                depthmap=depthmap,
+                camera_intrinsics=intrinsics,
+                additional_quantities_to_be_resized_with_nearest=additional_quantities,
+            )
+        )
+
+        # Actual cropping (if necessary)
+        new_intrinsics = camera_matrix_of_crop(
+            input_camera_matrix=intrinsics,
+            input_resolution=image.size,
+            output_resolution=resolution,
+            offset_factor=0.5,
+        )
+        crop_bbox = bbox_from_intrinsics_in_out(
+            input_camera_matrix=intrinsics,
+            output_camera_matrix=new_intrinsics,
+            output_resolution=resolution,
+        )
+        image, depthmap, new_intrinsics, additional_quantities = (
+            crop_image_and_other_optional_info(
+                image=image,
+                crop_bbox=crop_bbox,
+                depthmap=depthmap,
+                camera_intrinsics=intrinsics,
+                additional_quantities=additional_quantities,
+            )
+        )
+
+        # Return the output
+        if additional_quantities is not None:
+            return image, depthmap, new_intrinsics, additional_quantities
+        else:
+            return image, depthmap, new_intrinsics

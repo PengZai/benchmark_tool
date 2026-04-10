@@ -9,6 +9,9 @@ model_str: "mapanything"
 # Model config
 model_config:
   name: "mapanything"
+  isInputIntrinsics: true
+  isInputCameraPoses: true
+  isInputDepthZ: false
   encoder_config: ${model.encoder}
   info_sharing_config: ${model.info_sharing}
   pred_head_config: ${model.pred_head}

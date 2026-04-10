@@ -1,0 +1,22 @@
+defaults:
+  - _self_
+  - /model@depth_model: depth_anything_v2
+
+  
+model_str: "depth_enhancement"
+
+model_config:
+  name: "depth_enhancement"
+  depth_model_config: "${model.depth_model}"
+
+# Image Normalization Type
+data_norm_type: "${model.depth_model.data_norm_type}"
+# Torch hub force reload
+torch_hub_force_reload: "${model.depth_model.torch_hub_force_reload}"
+# test resolution
+test_resolution: "${model.depth_model.test_resolution}"
+postprocessing:
+  isAffineRefineDepthWithInputDepth: False
+  isConsistencyCheck: True
+  isJustCompareNearDistance: False
+  maximum_near_distance: 10 # unit metter

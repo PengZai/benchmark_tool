@@ -34,6 +34,10 @@ MODEL_CONFIGS = {
         "module": "benchmark.external.depth_anything_v2",
         "class_name": "DepthAnythingV2Wrapper",
     },
+    "depth_enhancement": {
+        "module": "benchmark.external.depth_enhancement",
+        "class_name": "DepthEnhancementWrapper",
+    },
 }
 
 

@@ -9,10 +9,7 @@ import numpy as np
 from PIL import Image
 import PIL
 from benchmark.utils.cropping import (
-    bbox_from_intrinsics_in_out,
-    camera_matrix_of_crop,
-    crop_image_and_other_optional_info,
-    rescale_image_and_other_optional_info,
+    crop_resize_if_necessary
 )
 
 @dataclass
@@ -41,6 +38,8 @@ class CameraDataset:
         sorted(self.undistorted_image_names)
         self.input_depth_names = os.listdir(camera_config['datapath']['input_depth'])
         sorted(self.input_depth_names)
+        self.input_pointcloud_names = os.listdir(camera_config['datapath']['input_pointcloud'])
+        sorted(self.input_pointcloud_names)
         self.GT_depth_names = os.listdir(camera_config['datapath']['GT_depth'])
         sorted(self.GT_depth_names)
         self.GT_pointcloud_names = os.listdir(camera_config['datapath']['GT_pointcloud'])
@@ -66,6 +65,7 @@ class CameraDataset:
                     "T_w_c": T_w_c,
                     "undistorted_image_name": self.undistorted_image_names[idx],
                     "input_depth_name": self.input_depth_names[idx],
+                    "input_pointcloud_name": self.GT_pointcloud_names[idx],
                     "GT_depth_name": self.GT_depth_names[idx],
                     "GT_pointcloud_name": self.GT_pointcloud_names[idx],
 
@@ -81,6 +81,12 @@ class CameraDataset:
         GT_pointcloud = np.asarray(pcd.points, dtype="f4")
         return GT_pointcloud
 
+    def getInputPointCloud(self, sample_idx):
+        
+        pcd = o3d.io.read_point_cloud(os.path.join(self.config['datapath']['input_pointcloud'], self.samples[sample_idx]['input_pointcloud_name'])) 
+        GT_pointcloud = np.asarray(pcd.points, dtype="f4")
+        return GT_pointcloud
+
 
 
 
@@ -89,8 +95,6 @@ class Testdataset(torch.utils.data.Dataset):
         super().__init__()
 
         self.config = config
-        self.principal_point_centered = config['dataset_test']['principal_point_centered']
-        self.aug_crop = config['dataset_test']['aug_crop']
         self.is_metric_scale = config['dataset_test']['is_metric_scale']
 
         self.resolution = config['model']['test_resolution']
@@ -105,7 +109,7 @@ class Testdataset(torch.utils.data.Dataset):
 
         self.data_norm_type = config['model']['data_norm_type']
 
-        if config['model']['data_norm_type'] in IMAGE_NORMALIZATION_DICT.keys():
+        if self.data_norm_type in IMAGE_NORMALIZATION_DICT.keys():
             image_norm = IMAGE_NORMALIZATION_DICT[self.data_norm_type]
             self.image_transform = torchvision.transforms.Compose(
                 [
@@ -114,7 +118,7 @@ class Testdataset(torch.utils.data.Dataset):
                 ]
             )
 
-        if config['model']['data_norm_type'] == 'unchange':
+        if self.data_norm_type == 'unchange':
 
             self.image_transform = torchvision.transforms.Compose(
                 [
@@ -128,108 +132,7 @@ class Testdataset(torch.utils.data.Dataset):
 
         self.makeSampleIndexPerViewsInSequential()
 
-    def _crop_resize_if_necessary(
-        self,
-        image,
-        resolution,
-        depthmap,
-        intrinsics,
-        additional_quantities=None,
-    ):
-        """
-        Process an image by downsampling and cropping as needed to match the target resolution.
-
-        This method performs the following operations:
-        1. Converts the image to PIL.Image if necessary
-        2. Crops the image centered on the principal point if requested
-        3. Downsamples the image using high-quality Lanczos filtering
-        4. Performs final cropping to match the target resolution
-
-        Args:
-            image (numpy.ndarray or PIL.Image.Image): Input image to be processed
-            resolution (tuple): Target resolution as (width, height)
-            depthmap (numpy.ndarray): Depth map corresponding to the image
-            intrinsics (numpy.ndarray): Camera intrinsics matrix (3x3)
-            additional_quantities (dict, optional): Additional image-related data to be processed
-                                                   alongside the main image with nearest interpolation. Defaults to None.
-
-        Returns:
-            tuple: Processed image, depthmap, and updated intrinsics matrix.
-                  If additional_quantities is provided, it returns those as well.
-        """
-        if not isinstance(image, PIL.Image.Image):
-            image = PIL.Image.fromarray(image)
-
-        # Cropping centered on the principal point if necessary
-        if self.principal_point_centered:
-            W, H = image.size
-            cx, cy = intrinsics[:2, 2].round().astype(int)
-            if cx < 0 or cx >= W or cy < 0 or cy >= H:
-                # Skip centered cropping if principal point is outside image bounds
-                pass
-            else:
-                min_margin_x = min(cx, W - cx)
-                min_margin_y = min(cy, H - cy)
-                left, top = cx - min_margin_x, cy - min_margin_y
-                right, bottom = cx + min_margin_x, cy + min_margin_y
-                crop_bbox = (left, top, right, bottom)
-                # Only perform the centered crop if the crop_bbox is larger than the target resolution
-                crop_width = right - left
-                crop_height = bottom - top
-                if crop_width > resolution[0] and crop_height > resolution[1]:
-                    image, depthmap, intrinsics, additional_quantities = (
-                        crop_image_and_other_optional_info(
-                            image=image,
-                            crop_bbox=crop_bbox,
-                            depthmap=depthmap,
-                            camera_intrinsics=intrinsics,
-                            additional_quantities=additional_quantities,
-                        )
-                    )
-
-        # Get the target resolution for re-scaling
-        target_rescale_resolution = np.array(resolution)
-        if self.aug_crop > 1:
-            target_rescale_resolution += self._rng.integers(0, self.aug_crop)
-
-        # High-quality Lanczos down-scaling if necessary
-        image, depthmap, intrinsics, additional_quantities = (
-            rescale_image_and_other_optional_info(
-                image=image,
-                output_resolution=target_rescale_resolution,
-                depthmap=depthmap,
-                camera_intrinsics=intrinsics,
-                additional_quantities_to_be_resized_with_nearest=additional_quantities,
-            )
-        )
-
-        # Actual cropping (if necessary)
-        new_intrinsics = camera_matrix_of_crop(
-            input_camera_matrix=intrinsics,
-            input_resolution=image.size,
-            output_resolution=resolution,
-            offset_factor=0.5,
-        )
-        crop_bbox = bbox_from_intrinsics_in_out(
-            input_camera_matrix=intrinsics,
-            output_camera_matrix=new_intrinsics,
-            output_resolution=resolution,
-        )
-        image, depthmap, new_intrinsics, additional_quantities = (
-            crop_image_and_other_optional_info(
-                image=image,
-                crop_bbox=crop_bbox,
-                depthmap=depthmap,
-                camera_intrinsics=intrinsics,
-                additional_quantities=additional_quantities,
-            )
-        )
-
-        # Return the output
-        if additional_quantities is not None:
-            return image, depthmap, new_intrinsics, additional_quantities
-        else:
-            return image, depthmap, new_intrinsics
+    
 
     @staticmethod
     def get_views(views, start_index, require_num_view, wrap=False):
@@ -271,7 +174,7 @@ class Testdataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.sample_indexes_per_views_list)
     
-      
+  
 
     def __getitem__(self, idx):
         
@@ -288,6 +191,22 @@ class Testdataset(torch.utils.data.Dataset):
                 input_depth = cv2.imread(os.path.join(camera_dataset.config['datapath']['input_depth'], camera_dataset.samples[sample_idx]['input_depth_name']), cv2.IMREAD_UNCHANGED)
                 GT_depth = cv2.imread(os.path.join(camera_dataset.config['datapath']['GT_depth'], camera_dataset.samples[sample_idx]['GT_depth_name']), cv2.IMREAD_UNCHANGED)
 
+                # vis = undistorted_image.copy()
+
+                # # depth valid mask
+                # mask = input_depth > 0
+
+                # # draw valid depth pixels in red
+                # vis[mask] = (0, 0, 255)   # BGR in OpenCV
+
+                # cv2.imshow("depth points on image", vis)
+           
+
+                original_h, original_w = undistorted_image.shape[:2]
+                target_w, target_h  = self.resolution
+
+
+
                 intrinsics = camera_dataset.config['undistorted_intrinsics']
                 K = np.array([
                     [intrinsics[0], 0, intrinsics[2]],
@@ -295,7 +214,33 @@ class Testdataset(torch.utils.data.Dataset):
                     [0, 0, 1]
                 ], dtype=np.float32)
 
-                _, input_depth, _ = self._crop_resize_if_necessary(
+                # sx = target_w / original_w
+                # sy = target_h / original_h
+
+
+                # K[0, 0] *= sx  # fx
+                # K[1, 1] *= sy  # fy
+                # K[0, 2] *= sx  # cx
+                # K[1, 2] *= sy  # cy
+
+                # undistorted_raw_image = cv2.resize(undistorted_image, (target_w, target_h), interpolation=cv2.INTER_LINEAR)
+                # input_depth = cv2.resize(input_depth, (target_w, target_h), interpolation=cv2.INTER_NEAREST)
+                # GT_depth = cv2.resize(GT_depth, (target_w, target_h), interpolation=cv2.INTER_NEAREST)
+
+
+                # vis2 = undistorted_raw_image.copy()
+
+                # # depth valid mask
+                # mask = input_depth > 0
+
+                # # draw valid depth pixels in red
+                # vis2[mask] = (0, 0, 255)   # BGR in OpenCV
+
+                # cv2.imshow("depth points on image after resize", vis2)
+
+                # cv2.waitKey(0)
+
+                _, input_depth, _ = crop_resize_if_necessary(
                     image=undistorted_image,
                     resolution=self.resolution,
                     depthmap=input_depth,
@@ -303,7 +248,7 @@ class Testdataset(torch.utils.data.Dataset):
                     additional_quantities=None,
                 )
 
-                undistorted_raw_image, GT_depth, K = self._crop_resize_if_necessary(
+                undistorted_raw_image, GT_depth, K = crop_resize_if_necessary(
                     image=undistorted_image,
                     resolution=self.resolution,
                     depthmap=GT_depth,
@@ -314,7 +259,8 @@ class Testdataset(torch.utils.data.Dataset):
                 undistorted_image = self.image_transform(undistorted_raw_image)
                 input_depth = self.depth_transform(input_depth)
                 GT_depth = self.depth_transform(GT_depth)
-
+                input_depth_mask = input_depth > 0
+                GT_depth_mask = GT_depth > 0    
                 
                 # input_depth_mask = input_depth > 0
                 # GT_depth = cv2.imread(os.path.join(camera_dataset.config['datapath']['GT_depth'], camera_dataset.samples[idx]['GT_depth_name']), cv2.IMREAD_UNCHANGED)
@@ -336,9 +282,9 @@ class Testdataset(torch.utils.data.Dataset):
                     'undistorted_raw_image': np.array(undistorted_raw_image),
                     "undistorted_image": undistorted_image,
                     "input_depth": input_depth,
-                    "input_depth_mask": input_depth > 0,
+                    "input_depth_mask":  input_depth_mask,
                     'GT_depth': GT_depth,
-                    'GT_depth_mask': GT_depth > 0
+                    'GT_depth_mask': GT_depth_mask,
                     # "input_depth_mask": input_depth_mask,
                     # "GT_depth": GT_depth,
                     # "GT_pointcloud": GT_pointcloud,
