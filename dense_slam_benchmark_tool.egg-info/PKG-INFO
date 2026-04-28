@@ -1,0 +1,47 @@
+Metadata-Version: 2.4
+Name: dense_slam_benchmark_tool
+Version: 0.0.1
+Summary: Dense SLAM & Depth Estimation Benchmark Tool - Unified framework for evaluating depth estimation and 3D reconstruction methods on standardized datasets
+Author-email: PengZai <649365461@qq.com>
+Requires-Python: >=3.10.0
+Description-Content-Type: text/markdown
+Requires-Dist: moderngl_window
+Requires-Dist: open3d
+Requires-Dist: opencv-python
+Requires-Dist: pytransform3d
+Requires-Dist: trimesh
+Requires-Dist: pycolmap
+Requires-Dist: hydra-core
+Requires-Dist: torch==2.10.0
+Requires-Dist: torchvision==0.25.0
+Provides-Extra: mast3r
+Requires-Dist: mast3r @ git+https://github.com/Nik-V9/mast3r ; extra == "mast3r"
+Provides-Extra: prior-depth-anything
+Requires-Dist: prior-depth-anything @ git+https://github.com/PengZai/Prior-Depth-Anything.git ; extra == "prior-depth-anything"
+Provides-Extra: mapanything
+Requires-Dist: mapanything @ git+https://github.com/facebookresearch/map-anything.git ; extra == "mapanything"
+Provides-Extra: depth-anything-v2
+Requires-Dist: depth-anything-v2 @ git+https://github.com/PengZai/Depth-Anything-V2.git ; extra == "depth-anything-v2"
+Provides-Extra: depth-anything-v3
+Requires-Dist: depth-anything-3 @ git+https://github.com/PengZai/Depth-Anything-3.git@main#egg=depth-anything-3 ; extra == "depth-anything-v3"
+Provides-Extra: vggt
+Requires-Dist: vggt @ git+https://github.com/PengZai/vggt.git ; extra == "vggt"
+Provides-Extra: hloc
+Requires-Dist: hloc[all-examples] @ git+https://github.com/PengZai/Hierarchical-Localization.git ; extra == "hloc"
+
+# Just Read Me
+
+
+
+# install prior-depth-anything envrionment
+pip install torch==2.2.2 torchvision==0.17.2
+pip install torch-cluster -f https://data.pyg.org/whl/torch-2.2.2+cu121.html
+pip install -e ".[prior-depth-anything]"
+
+
+
+# install benchmark dataset
+conda create -n benchmark-dataset python=3.11.0
+conda activate benchmark-dataset
+python3 -m pip install -e .
+python3 -m pip install thridparity/in3d

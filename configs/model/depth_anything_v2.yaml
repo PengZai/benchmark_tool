@@ -14,6 +14,6 @@ torch_hub_force_reload: false
 test_resolution: [518, 336]
 postprocessing:
   isAffineRefineDepthWithInputDepth: true
-  isConsistencyCheck: true
+  isConsistencyCheck: false
   isJustCompareNearDistance: false
   maximum_near_distance: 10 # unit metter

@@ -88,6 +88,7 @@ sensor3ds:
   sensor3d4:
     id: 4
     sensor3dtype: imagedepth
+    camera_id: 0
     name: colmap_dense_depth_in_left_rgb_plane
     sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/colmap_dense_depth/left_rgb/depth
     camera_model: pinhole
@@ -102,6 +103,7 @@ sensor3ds:
   sensor3d5:
     id: 5
     sensor3dtype: imagedepth
+    camera_id: 1
     name: colmap_dense_depth_in_right_rgb_plane
     sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/colmap_dense_depth/right_rgb/depth
     camera_model: pinhole
@@ -114,7 +116,8 @@ sensor3ds:
 
   sensor3d6:
     id: 6
-    sensor3dtype: pointcloud
+    sensor3dtype: pointcloud_in_camera_coordinate
+    camera_id: 0
     name: colmap_sparse_point_in_left_rgb_coordinate
     sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/colmap_sparse_points/left_rgb/pointcloud
     xyz_scale_factor: [1.0, 1.0, 1.0] # if the point cloud is in the same scale with the RGB image coordinate, then the scale factor is [1.0, 1.0, 1.0]. If the point cloud is in the original scale of the lidar, you need to specify a scale factor to convert it to the same scale with the RGB image coordinate. For example, if the original lidar point cloud is in meter unit and the RGB image coordinate is in millimeter unit, then you need to specify a scale factor of [1000.0, 1000.0, 1000.0].
@@ -122,7 +125,8 @@ sensor3ds:
 
   sensor3d7:
     id: 7
-    sensor3dtype: pointcloud
+    sensor3dtype: pointcloud_in_camera_coordinate
+    camera_id: 1
     name: colmap_sparse_point_in_right_rgb_coordinate
     sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/colmap_sparse_points/right_rgb/pointcloud
     xyz_scale_factor: [1.0, 1.0, 1.0]
@@ -130,7 +134,8 @@ sensor3ds:
 
   sensor3d8:
     id: 8
-    sensor3dtype: pointcloud
+    sensor3dtype: pointcloud_in_camera_coordinate
+    camera_id: 0
     name: colmap_sparse_point_in_left_rgb_coordinate_scale_aligned_with_livox_lidar
     sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/colmap_sparse_points/left_rgb/pointcloud
     xyz_scale_factor: [1.02, 1.02, 1.02] # if the point cloud is in the same scale with the RGB image coordinate, then the scale factor is [1.0, 1.0, 1.0]. If the point cloud is in the original scale of the lidar, you need to specify a scale factor to convert it to the same scale with the RGB image coordinate. For example, if the original lidar point cloud is in meter unit and the RGB image coordinate is in millimeter unit, then you need to specify a scale factor of [1000.0, 1000.0, 1000.0].
@@ -139,7 +144,8 @@ sensor3ds:
 
   sensor3d9:
     id: 9
-    sensor3dtype: pointcloud
+    sensor3dtype: pointcloud_in_camera_coordinate
+    camera_id: 1
     name: colmap_sparse_point_in_right_rgb_coordinate_scale_aligned_with_livox_lidar
     sensor3dpath: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/1018_00_img10hz600p/colmap_sparse_points/right_rgb/pointcloud
     xyz_scale_factor: [1.028657477805915, 1.028657477805915, 1.028657477805915]
@@ -147,7 +153,8 @@ sensor3ds:
 
 
 data_source1:
-  trajectorytype: liosam
+  trajectoryname: liosam
+  trajectorytype: poses_for_single_sensor
   trajectory_path: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/lio_sam_save_map/traj_algin_with_colmap_timestamp.txt
   used_sensor3d_idxes: [0]
   num_cumulation: [10] # if there are two used sensor3ds, you need to specify two numbers of cumulation.
@@ -211,7 +218,8 @@ data_source1:
 
 
 data_source2:
-  trajectorytype: colmap
+  trajectoryname: liosam
+  trajectorytype: poses_for_single_sensor
   trajectory_path: /media/spiderman/zhipeng_8t1/datasets/BotanicGarden/1018-00/colmap_trajectory/traj_1.txt
   used_sensor3d_idxes: [1]
   num_cumulation: [0] # if there are two used sensor3ds, you need to specify two numbers of cumulation.

@@ -90,8 +90,8 @@ description = "Dense SLAM & Depth Estimation Benchmark Tool - Unified evaluation
 #### Internal Package Name
 **Keep `benchmark/` folder as-is:**
 ```python
-from benchmark.dataloader import CameraDataset  # ← No changes needed
-from benchmark.metrics import evaluate          # ← No changes needed
+from benchmark.benchmark_tools.dataloader import CameraDataset  # ← No changes needed
+from benchmark.benchmark_tools import metrics                   # ← No changes needed
 ```
 
 **Why:** The Python package name can differ from the project name. Example:
@@ -178,7 +178,7 @@ requires-python = ">=3.10.0"
 - [ ] Update `README.md` title and description
 - [ ] Update installation instructions in README
 - [ ] Test: `pip install -e .` still works
-- [ ] Verify: `python -c "from benchmark import metrics"` still works
+- [ ] Verify: `python -c "from dense_slam_benchmark.benchmark_tools import metrics"` still works
 - [ ] Update `.gitmodules` paths if needed
 - [ ] Commit with message: "Rename project to dense_slam_benchmark_tool"
 

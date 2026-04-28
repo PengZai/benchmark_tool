@@ -1,0 +1,19 @@
+# String for model factory
+model_str: "vggt"
+# Model config
+model_config:
+  name: "vggt"
+  # HF model string
+  hf_model_name: "facebook/VGGT-1B"
+# Image Normalization Type — VGGT expects raw [0, 1] images
+data_norm_type: "dummy"
+# VGGT checkpoint is loaded from HF Hub by the inference wrapper
+pretrained: null
+# Torch hub force reload
+torch_hub_force_reload: False
+test_resolution: [518, 336]
+postprocessing:
+  isAffineRefineDepthWithInputDepth: true
+  isConsistencyCheck: true
+  isJustCompareNearDistance: false
+  maximum_near_distance: 10 # unit metter

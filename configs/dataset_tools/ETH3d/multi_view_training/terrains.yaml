@@ -1,0 +1,93 @@
+# %YAML:1.1 # need to specify the file type at the top!
+
+
+system:
+  use_data_source: 1
+  start_idx: 0
+  end_idx: 20
+  maximum_depth_for_depthimage: 100
+  minimum_depth_for_depthimage: 0.001
+  maximum_z_for_pointcloud: 100 # lidar reliable distance is 100 meter maximum
+  minimum_z_for_pointcloud: 0.001
+  isFilterDepthByKNN: false
+  K_for_filterdepth: 1
+
+output:
+  isOutput: true
+  path: /mnt/lboro_nas/personal/Zhipeng/wai_data/ETH3d_terrains_1
+  isSaveVisualizationDepthImage: true
+  maximum_depth_for_vis_depthimage: -1
+  minimum_depth_for_vis_depthimage: -1
+
+
+visualization:
+  isVisualization: true
+
+
+# images_rig_cam7 -> CAMERA_ID 2
+# images_rig_cam6 -> CAMERA_ID 1
+# images_rig_cam5 -> CAMERA_ID 0
+# images_rig_cam4 -> CAMERA_ID 3
+
+
+cameras:
+  camera0:
+    id: 3
+    name: images_rig_cam4_undistorted
+    imagepath: /mnt/lboro_nas/personal/Zhipeng/eth3d/multi_view_training_rig/terrains/images/images_rig_cam4
+    camera_model: pinhole
+    original_resolution: [752, 480]
+    original_intrinsics: [530.632, 528.715, 408.456, 258.794] #fx, fy, cu, cv
+    distortion_model: thin_prism_fisheye
+    distortion_coeffs: [-0.0674999, 0.00435952, 0.0048011, 0.000947228, -0.0223572, 0.00179595, 0.00547619, -0.0295441] #k1,k2,p1,p2,k3,k4,sx1,sy1
+    resolution: [752, 480] # width x height, don't larger than original resolution
+
+  camera1:
+    id: 0
+    name: images_rig_cam5_undistorted
+    imagepath: /mnt/lboro_nas/personal/Zhipeng/eth3d/multi_view_training_rig/terrains/images/images_rig_cam5
+    camera_model: pinhole
+    original_resolution: [752, 480]
+    original_intrinsics: [527.696, 525.705, 385.326, 285.862] #fx, fy, cu, cv
+    distortion_model: thin_prism_fisheye
+    distortion_coeffs: [-0.069723, 0.0243198, 0.00301105, -0.000829323, -0.0774396, 0.0469866, 0.0142071, -0.0303289] #k1,k2,p1,p2,k3,k4,sx1,sy1
+    resolution: [752, 480] # width x height, don't larger than original resolution
+
+# GT depth
+sensor3ds:
+  sensor3d0:
+    id: 0
+    sensor3dtype: imagedepth
+    camera_id: 3
+    name: gt_depth_in_cam4_plane
+    sensor3dpath: /mnt/lboro_nas/personal/Zhipeng/eth3d/multi_view_training_rig_depth/terrains_rig_depth/terrains/ground_truth_depth/images_rig_cam4
+    camera_model: pinhole
+    original_resolution: [752, 480]
+    original_intrinsics: [530.632, 528.715, 408.456, 258.794] #fx, fy, cu, cv
+    distortion_model: thin_prism_fisheye
+    distortion_coeffs: [-0.0674999, 0.00435952, 0.0048011, 0.000947228, -0.0223572, 0.00179595, 0.00547619, -0.0295441] #k1,k2,p1,p2,k3,k4,sx1,sy1
+    xyz_scale_factor: [1.0, 1.0, 1.0]
+    down_sample_rate: 1.0
+
+  sensor3d1:
+    id: 1
+    sensor3dtype: imagedepth
+    camera_id: 0
+    name: gt_depth_in_cam5_plane
+    sensor3dpath: /mnt/lboro_nas/personal/Zhipeng/eth3d/multi_view_training_rig_depth/terrains_rig_depth/terrains/ground_truth_depth/images_rig_cam5
+    camera_model: pinhole
+    original_resolution: [752, 480]
+    original_intrinsics: [527.696, 525.705, 385.326, 285.862] #fx, fy, cu, cv
+    distortion_model: thin_prism_fisheye
+    distortion_coeffs: [-0.069723, 0.0243198, 0.00301105, -0.000829323, -0.0774396, 0.0469866, 0.0142071, -0.0303289] #k1,k2,p1,p2,k3,k4,sx1,sy1
+    xyz_scale_factor: [1.0, 1.0, 1.0]
+    down_sample_rate: 1.0
+
+
+data_source1:
+  trajectoryname: eth3d
+  trajectorytype: poses_for_all_cameras
+  trajectory_path: /mnt/lboro_nas/personal/Zhipeng/eth3d/multi_view_training_rig/terrains/rig_calibration/images.txt
+  used_sensor3d_idxes: [0, 1]
+  num_cumulation: [0, 0] # if there are two used sensor3ds, you need to specify two numbers of cumulation.
+  used_camera_idxes: [0, 1]

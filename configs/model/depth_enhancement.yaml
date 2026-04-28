@@ -8,6 +8,15 @@ model_str: "depth_enhancement"
 model_config:
   name: "depth_enhancement"
   depth_model_config: "${model.depth_model}"
+  K_NN_for_uv: 6
+  knn_feature_mode: "uv"
+  weight_z: 1.0
+  res_thresh: 0.1
+  knn_depth_norm_thresh: 2.0
+  confidence_alpha: 10.0
+  confidence_beta: 1.0
+  confidence_eps: 1.0e-8
+  debug: False
 
 # Image Normalization Type
 data_norm_type: "${model.depth_model.data_norm_type}"

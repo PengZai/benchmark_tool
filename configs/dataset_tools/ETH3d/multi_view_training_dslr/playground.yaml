@@ -1,0 +1,99 @@
+# %YAML:1.1 # need to specify the file type at the top!
+
+
+system:
+  use_data_source: 1
+  # start_idx: 25
+  # end_idx: 40
+  start_idx: 0
+  end_idx: -1
+  maximum_depth_for_depthimage: 100
+  minimum_depth_for_depthimage: 0.001
+  maximum_z_for_pointcloud: 100 # lidar reliable distance is 100 meter maximum
+  minimum_z_for_pointcloud: 0.001
+  isFilterDepthByKNN: false
+  K_for_filterdepth: 1
+
+output:
+  isOutput: true
+  path: /mnt/lboro_nas/personal/Zhipeng/wai_data/ETH3d_playground_1
+  isSaveVisualizationDepthImage: true
+  maximum_depth_for_vis_depthimage: -1
+  minimum_depth_for_vis_depthimage: -1
+
+
+visualization:
+  isVisualization: true
+
+
+# images_rig_cam7 -> CAMERA_ID 0
+# images_rig_cam6 -> CAMERA_ID 1
+# images_rig_cam5 -> CAMERA_ID 2
+# images_rig_cam4 -> CAMERA_ID 3
+
+
+cameras:
+  camera0:
+    id: 0
+    name: dslr_images_cam0
+    imagepath: /mnt/lboro_nas/personal/Zhipeng/eth3d/multi_view_training_dslr_jpg/playground/images/dslr_images
+    camera_model: pinhole
+    resolution: [6048, 4032] # width x height, don't larger than original resolution
+    original_intrinsics: [3433.17, 3432.1, 3030.84, 2025.92] #fx, fy, cu, cv
+    distortion_model: thin_prism_fisheye
+    distortion_coeffs: [0.202468, 0.251652, 0.00029091, 6.73133e-05, -0.24922, 0.462903, 0.000862538, 0.000520333] #k1,k2,p1,p2,k3,k4,sx1,sy1
+  camera1:
+    id: 1
+    name: dslr_images_cam1
+    imagepath: /mnt/lboro_nas/personal/Zhipeng/eth3d/multi_view_training_dslr_jpg/playground/images/dslr_images
+    camera_model: pinhole
+    resolution: [6048, 4032] # width x height, don't larger than original resolution
+    original_intrinsics: [3428.8, 3428.38, 3028.83, 2021.97] #fx, fy, cu, cv
+    distortion_model: thin_prism_fisheye
+    distortion_coeffs: [0.218695, 0.17575, 0.000138324, -0.000213247, -0.105973, 0.372419, 0.0012459, 0.00028537] #k1,k2,p1,p2,k3,k4,sx1,sy1
+
+# GT depth
+sensor3ds:
+  sensor3d0:
+    id: 0
+    sensor3dtype: imagedepth
+    camera_id: 0
+    name: gt_depth_in_cam0_plane
+    sensor3dpath: /mnt/lboro_nas/personal/Zhipeng/eth3d/multi_view_training_dslr_depth/playground/ground_truth_depth/dslr_images
+    camera_model: pinhole
+    resolution: [6048, 4032] # width x height, don't larger than original resolution
+    original_intrinsics: [3433.17, 3432.1, 3030.84, 2025.92] #fx, fy, cu, cv
+    distortion_model: thin_prism_fisheye
+    distortion_coeffs: [0.202468, 0.251652, 0.00029091, 6.73133e-05, -0.24922, 0.462903, 0.000862538, 0.000520333] #k1,k2,p1,p2,k3,k4,sx1,sy1
+    xyz_scale_factor: [1.0, 1.0, 1.0]
+    down_sample_rate: 1.0
+
+  sensor3d1:
+    id: 1
+    sensor3dtype: imagedepth
+    camera_id: 1
+    name: gt_depth_in_cam1_plane
+    sensor3dpath: /mnt/lboro_nas/personal/Zhipeng/eth3d/multi_view_training_dslr_depth/playground/ground_truth_depth/dslr_images
+    camera_model: pinhole
+    resolution: [6048, 4032] # width x height, don't larger than original resolution
+    original_intrinsics: [3428.8, 3428.38, 3028.83, 2021.97] #fx, fy, cu, cv
+    distortion_model: thin_prism_fisheye
+    distortion_coeffs: [0.218695, 0.17575, 0.000138324, -0.000213247, -0.105973, 0.372419, 0.0012459, 0.00028537] #k1,k2,p1,p2,k3,k4,sx1,sy1
+    xyz_scale_factor: [1.0, 1.0, 1.0]
+    down_sample_rate: 1.0
+
+  
+
+
+data_source1:
+  trajectoryname: eth3d
+  trajectorytype: poses_for_all_cameras
+  trajectory_path: /mnt/lboro_nas/personal/Zhipeng/eth3d/multi_view_training_dslr_jpg/playground/dslr_calibration_jpg/images.txt
+  used_sensor3d_idxes: [1]
+  num_cumulation: [0] # if there are two used sensor3ds, you need to specify two numbers of cumulation.
+  used_camera_idxes: [1]
+
+
+
+
+

@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "benchmark_tool"
+name = "dense_slam_benchmark_tool"
 version = "0.0.1"
 authors = [
   { name="PengZai", email="649365461@qq.com" }
 ]
-description = "A reconstruction benchmark tool"
+description = "Dense SLAM & Depth Estimation Benchmark Tool - Unified framework for evaluating depth estimation and 3D reconstruction methods on standardized datasets"
 readme = "README.md"
 requires-python = ">=3.10.0"
 
@@ -21,8 +21,8 @@ dependencies = [
     "trimesh",
     "pycolmap",
     "hydra-core",
-    "torch",
-    "torchvision"
+    "torch==2.10.0",
+    "torchvision==0.25.0"
 ]
 
 
@@ -31,10 +31,16 @@ mast3r = ["mast3r @ git+https://github.com/Nik-V9/mast3r"]
 prior-depth-anything = ["prior-depth-anything @ git+https://github.com/PengZai/Prior-Depth-Anything.git"]
 mapanything = ["mapanything @ git+https://github.com/facebookresearch/map-anything.git"]
 depth-anything-V2 = ["depth-anything-v2 @ git+https://github.com/PengZai/Depth-Anything-V2.git"]
+depth-anything-V3 = ["depth-anything-3 @ git+https://github.com/PengZai/Depth-Anything-3.git@main#egg=depth-anything-3"]
+vggt = ["vggt @ git+https://github.com/PengZai/vggt.git"]
 
-[tool.setuptools]
-# Disable automatic package discovery to avoid conflicts
-packages = ["benchmark"]
+hloc = [
+  "hloc[all-examples] @ git+https://github.com/PengZai/Hierarchical-Localization.git",
+]
+
+
+[tool.setuptools.packages.find]
+include = ["dense_slam_benchmark*"]
 
 [tool.setuptools.package-data]
-benchmark = ["py.typed"]
+dense_slam_benchmark = ["py.typed"]

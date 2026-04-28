@@ -54,11 +54,11 @@ Public Dataset → dataset_tools wrapper → Standardized Format (CameraDataset)
 ### ✅ **Strengths**
 
 #### 2.1 Modular Separation of Concerns
-- **`benchmark/dataset_tools/`** — Handles data generation and standardization
-- **`benchmark/external/`** — Isolated third-party methods (MASt3R, Depth-Anything, MapAnything, etc.)
-- **`benchmark/metrics.py`** — Centralized evaluation metrics
-- **`benchmark/scripts/`** — Executable benchmark workflows
-- **`benchmark/postprocessing/`** — Results aggregation and analysis
+- **`dense_slam_benchmark/dataset_tools/`** — Handles data generation and standardization
+- **`dense_slam_benchmark/external/`** — Isolated third-party methods (MASt3R, Depth-Anything, MapAnything, etc.)
+- **`dense_slam_benchmark/metrics.py`** — Centralized evaluation metrics
+- **`dense_slam_benchmark/scripts/`** — Executable benchmark workflows
+- **`dense_slam_benchmark/postprocessing/`** — Results aggregation and analysis
 
 This clean separation makes it easy to:
 - Add new depth estimation methods
@@ -282,7 +282,7 @@ Post-Processing
 ## 5. Data Quality & Validation
 
 ### Consider Adding:
-1. **Input Validation Layer** (`benchmark/validation.py`)
+1. **Input Validation Layer** (`dense_slam_benchmark/validation.py`)
    - Verify camera intrinsics are valid
    - Check image dimensions match metadata
    - Validate depth map value ranges

@@ -1,0 +1,161 @@
+# %YAML:1.1 # need to specify the file type at the top!
+
+
+system:
+  use_data_source: 1
+  # start_idx: 25
+  # end_idx: 40
+  start_idx: 1000
+  end_idx: 1010
+  maximum_depth_for_depthimage: 100
+  minimum_depth_for_depthimage: 0.001
+  maximum_z_for_pointcloud: 100 # lidar reliable distance is 100 meter maximum
+  minimum_z_for_pointcloud: 0.001
+  isFilterDepthByKNN: True
+  K_for_filterdepth: 1
+
+output:
+  isOutput: 1
+  path: /mnt/lboro_nas/personal/Zhipeng/wai_data/frontier_2023-03-22-08-23-52_1_1
+  isSaveVisualizationDepthImage: 1
+  maximum_depth_for_vis_depthimage: 30
+  minimum_depth_for_vis_depthimage: 0.001
+
+
+visualization:
+  isVisualization: 0
+
+
+
+cameras:
+  camera0:
+    id: 0
+    name: cam0 # front camera
+    imagepath: /mnt/lboro_nas/personal/Zhipeng/digiforests/digiforests-rosbags-c1/raw/val/2023-03/exp11-c1/rosbags/frontier_2023-03-22-08-23-52_1/cam0
+    camera_model: pinhole
+    resolution: [1440, 1080] # width x height, don't larger than original resolution
+    original_intrinsics: [693.8931819536299, 719.5678383280781, 693.3960166938975, 533.9184276168319] #fx, fy, cu, cv
+    distortion_model: equidistant
+    distortion_coeffs: [-0.034667028786087725, -0.009993227670641681, 0.007205558833794907, -0.0024186626760043578] #k1,k2,p1,p2
+
+
+  camera1:
+    id: 1
+    name: cam1 # left camera
+    imagepath: /mnt/lboro_nas/personal/Zhipeng/digiforests/digiforests-rosbags-c1/raw/val/2023-03/exp11-c1/rosbags/frontier_2023-03-22-08-23-52_1/cam1
+    camera_model: pinhole
+    resolution: [1440, 1080] # width x height, don't larger than original resolution
+    original_intrinsics: [694.7896654210638, 724.5994250124885, 694.012912596752, 533.9973373798589] #fx, fy, cu, cv
+    distortion_model: equidistant
+    distortion_coeffs: [-0.03967365600890124, -0.0022091653738862643, 0.000693489744587459, -0.000436436248026843] #k1,k2,p1,p2
+
+  camera2:
+    id: 2
+    name: cam2 # right camera
+    imagepath: /mnt/lboro_nas/personal/Zhipeng/digiforests/digiforests-rosbags-c1/raw/val/2023-03/exp11-c1/rosbags/frontier_2023-03-22-08-23-52_1/cam2
+    camera_model: pinhole
+    resolution: [1440, 1080] # width x height, don't larger than original resolution
+    original_intrinsics: [693.278252218585, 734.4227661171273, 693.1271607846542, 531.8167551960729] #fx, fy, cu, cv
+    distortion_model: equidistant
+    distortion_coeffs: [-0.040319225254883004, 0.0011693766006776866, -0.00271347523321987, 0.0006471946770560492] #k1,k2,p1,p2
+
+# GT depth
+sensor3ds:
+  sensor3d0:
+    id: 0
+    sensor3dtype: pointcloud
+    name: pandar_lidar
+    sensor3dpath: /mnt/lboro_nas/personal/Zhipeng/digiforests/digiforests-rosbags-c1/raw/val/2023-03/exp11-c1/rosbags/frontier_2023-03-22-08-23-52_1/pandar
+    xyz_scale_factor: [1.0, 1.0, 1.0]
+    down_sample_rate: 1.0
+
+  sensor3d1:
+    id: 1
+    sensor3dtype: pointcloud
+    name: pandar_lidar_downsampled_40_percent
+    sensor3dpath: /mnt/lboro_nas/personal/Zhipeng/digiforests/digiforests-rosbags-c1/raw/val/2023-03/exp11-c1/rosbags/frontier_2023-03-22-08-23-52_1/pandar
+    xyz_scale_factor: [1.0, 1.0, 1.0]
+    down_sample_rate: 0.4
+
+
+
+data_source1:
+  trajectorytype: slam_poses
+  trajectory_path: /mnt/lboro_nas/personal/Zhipeng/digiforests/digiforests-rosbags-c1/raw/val/2023-03/exp11-c1/rosbags/frontier_2023-03-22-08-23-52_1/GT_poses_algin_with_colmap_timestamp.txt
+  used_sensor3d_idxes: [0]
+  num_cumulation: [0] # if there are two used sensor3ds, you need to specify two numbers of cumulation.
+  # T_pose_used_sensor3d_idx0:
+  #   - [-9.99992059e-01, -3.92360135e-03, -6.98621197e-04, -6.62023678e-03]
+  #   - [3.92095763e-03, -9.99985296e-01,  3.74618373e-03, -1.60470984e-02]
+  #   - [-7.13309456e-04,  3.74341472e-03,  9.99992739e-01, 1.47244992e-02]
+  #   - [0.0,0.0,0.0,1.0] # T_imu_pandar_base
+  # T_pose_used_sensor3d_idx1:
+  #   - [-9.99992059e-01, -3.92360135e-03, -6.98621197e-04, -6.62023678e-03]
+  #   - [3.92095763e-03, -9.99985296e-01,  3.74618373e-03, -1.60470984e-02]
+  #   - [-7.13309456e-04,  3.74341472e-03,  9.99992739e-01, 1.47244992e-02]
+  #   - [0.0,0.0,0.0,1.0] # T_imu_pandar_base
+  # T_pose_used_sensor3d_idx0:
+  #   - [-3.92360135e-03,  9.99992059e-01, -6.98621197e-04, -6.65265281e-03]
+  #   - [-9.99985296e-01, -3.92095763e-03,  3.74618373e-03, -1.58732754e-02]
+  #   - [3.74341472e-03,  7.13309456e-04,  9.99992739e-01, 6.11241623e-02]
+  #   - [0.0,0.0,0.0,1.0] # T_imu_pandar_lidar
+  # T_pose_used_sensor3d_idx1:
+  #   - [-3.92360135e-03,  9.99992059e-01, -6.98621197e-04, -6.65265281e-03]
+  #   - [-9.99985296e-01, -3.92095763e-03,  3.74618373e-03, -1.58732754e-02]
+  #   - [3.74341472e-03,  7.13309456e-04,  9.99992739e-01, 6.11241623e-02]
+  #   - [0.0,0.0,0.0,1.0] # T_imu_pandar_lidar
+  # used_camera_idxes: [0]
+  # T_pose_used_cam_idx0:
+  #   - [-1.0000000e+00, -0.0000000e+00, -0.0000000e+00, -6.0000000e-03]
+  #   - [-0.0000000e+00,  4.4408921e-16, -1.0000000e+00, -7.0280000e-02]
+  #   - [-0.0000000e+00, -1.0000000e+00,  4.4408921e-16, -3.0000000e-03] 
+  #   - [0,0,0,1.0]  # T_imu_cam0_front
+  # T_pose_used_cam_idx1:
+  #   - [-1.30910198e-03, -2.50705854e-04, -9.99999112e-01, -6.03625562e-02]
+  #   - [9.99968975e-01, -7.76790071e-03, -1.30711507e-03, -1.51107265e-02]
+  #   - [-7.76756611e-03, -9.99969798e-01,  2.60867050e-04, -3.39340185e-03] 
+  #   - [0,0,0,1.0] # T_imu_cam1_left
+  # T_pose_used_cam_idx2:
+  #   - [9.99997234e-01, -2.33341285e-03, -2.95997739e-04, -5.05160366e-03]
+  #   - [2.75968172e-04, -8.57946085e-03,  9.99963158e-01, 3.93780764e-02]
+  #   - [-2.33586639e-03, -9.99960473e-01, -8.57879317e-03, -3.69494140e-03] 
+  #   - [0,0,0,1.0] # T_imu_cam2_right
+
+  # T_pose_used_sensor3d_idx0:
+  #   - [1.0, 0.0,  0.0000000e+00,  0.0000000e+00]
+  #   - [0.0, 1.0,  0.0000000e+00,  0.0000000e+00]
+  #   - [0.0000000e+00,  0.0000000e+00,  1.0000000e+00,  0]
+  #   - [0.0,0.0,0.0,1.0] # T_base_pandar_lidar
+  # T_pose_used_sensor3d_idx1:
+  #   - [1.0, 0.0,  0.0000000e+00,  0.0000000e+00]
+  #   - [0.0, 1.0,  0.0000000e+00,  0.0000000e+00]
+  #   - [0.0000000e+00,  0.0000000e+00,  1.0000000e+00,  0]
+  #   - [0.0,0.0,0.0,1.0] # T_base_pandar_lidar
+
+  T_pose_used_sensor3d_idx0:
+    - [-4.4408921e-16, -1.0000000e+00,  0.0000000e+00,  0.0000000e+00]
+    - [1.0000000e+00, -4.4408921e-16,  0.0000000e+00,  0.0000000e+00]
+    - [0.0000000e+00,  0.0000000e+00,  1.0000000e+00,  4.6400000e-02]
+    - [0.0,0.0,0.0,1.0] # T_base_pandar_lidar
+  T_pose_used_sensor3d_idx0:
+    - [-4.4408921e-16,  1.0000000e+00,  0.0000000e+00,  0.0000000e+00]
+    - [-1.0000000e+00, -4.4408921e-16, -0.0000000e+00, -0.0000000e+00]
+    - [0.0000000e+00,  0.0000000e+00,  1.0000000e+00, -4.6400000e-02]
+    - [0.0,0.0,0.0,1.0] # T_base_pandar_lidar
+  used_camera_idxes: [0]
+  T_pose_used_cam_idx0:
+    - [9.99992059e-01,  7.13309456e-04, -3.92095763e-03, -8.20233714e-04]
+    - [3.92360135e-03, -3.74341472e-03,  9.99985296e-01, 5.41633205e-02]
+    - [6.98621197e-04, -9.99992739e-01, -3.74618373e-03, -1.79279703e-02] 
+    - [0,0,0,1.0]  # T_base_cam0_front
+  T_pose_used_cam_idx1:
+    - [5.23546825e-03,  9.33534166e-04,  9.99985859e-01, 5.37584878e-02]
+    - [-9.99978212e-01,  4.02546850e-03,  5.23167025e-03, -7.93317493e-04]
+    - [-4.02052763e-03, -9.99991462e-01,  9.54589039e-04, -1.80767162e-02] 
+    - [0,0,0,1.0] # T_base_cam1_left
+  T_pose_used_cam_idx2:
+    - [-0.99998654,  0.00301304,  0.00422293, -0.00133816]
+    - [-0.0042083 ,  0.00484522, -0.99997941, -0.05549947]
+    - [-0.00303343, -0.99998372, -0.00483248, -0.01821277] 
+    - [0,0,0,1.0] # T_base_cam2_right
+
